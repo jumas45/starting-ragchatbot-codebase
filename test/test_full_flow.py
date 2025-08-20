@@ -3,6 +3,10 @@
 Test script to demonstrate the full flow with clickable source links
 """
 
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'backend'))
+
 from vector_store import VectorStore
 from search_tools import CourseSearchTool, ToolManager
 from app import Source

@@ -3,6 +3,10 @@
 Test script to verify that source links are working correctly
 """
 
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'backend'))
+
 from vector_store import VectorStore
 from search_tools import CourseSearchTool
 from config import config

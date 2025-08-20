@@ -3,6 +3,10 @@
 Test script to verify the complete tool execution flow works
 """
 
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'backend'))
+
 from vector_store import VectorStore
 from search_tools import CourseSearchTool, ToolManager
 from config import config
