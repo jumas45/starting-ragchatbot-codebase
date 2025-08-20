@@ -16,7 +16,15 @@ class RAGSystem:
         # Initialize core components
         self.document_processor = DocumentProcessor(config.CHUNK_SIZE, config.CHUNK_OVERLAP)
         self.vector_store = VectorStore(config.CHROMA_PATH, config.EMBEDDING_MODEL, config.MAX_RESULTS)
-        self.ai_generator = AIGenerator(config.ANTHROPIC_API_KEY, config.ANTHROPIC_MODEL)
+        
+        # Initialize AI generator with the configured provider
+        if config.LLM_PROVIDER.lower() == "anthropic":
+            self.ai_generator = AIGenerator(config.LLM_PROVIDER, config.ANTHROPIC_API_KEY, config.ANTHROPIC_MODEL)
+        elif config.LLM_PROVIDER.lower() == "gemini":
+            self.ai_generator = AIGenerator(config.LLM_PROVIDER, config.GEMINI_API_KEY, config.GEMINI_MODEL)
+        else:
+            raise ValueError(f"Unsupported LLM provider: {config.LLM_PROVIDER}")
+            
         self.session_manager = SessionManager(config.MAX_HISTORY)
         
         # Initialize search tools
