@@ -75,6 +75,50 @@ header h1 {
     background: var(--background);
 }
 
+/* Sidebar Toggle Button */
+.sidebar-toggle {
+    position: absolute;
+    top: 50%;
+    left: 320px;
+    transform: translateY(-50%);
+    z-index: 1000;
+    background: var(--surface);
+    border: 1px solid var(--border-color);
+    border-left: none;
+    border-radius: 0 8px 8px 0;
+    padding: 1rem 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sidebar-toggle:hover {
+    background: var(--surface-hover);
+    color: var(--text-primary);
+}
+
+.sidebar-toggle:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--focus-ring);
+}
+
+.toggle-icon {
+    font-size: 1rem;
+    transition: transform 0.3s ease;
+    user-select: none;
+}
+
+.sidebar-toggle.collapsed .toggle-icon {
+    transform: rotate(180deg);
+}
+
+.sidebar-toggle.collapsed {
+    left: 0;
+}
+
 /* Left Sidebar */
 .sidebar {
     width: 320px;
@@ -83,6 +127,12 @@ header h1 {
     padding: 1.5rem;
     overflow-y: auto;
     flex-shrink: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.sidebar.collapsed {
+    transform: translateX(-100%);
+    opacity: 0;
 }
 
 /* Custom Scrollbar for Sidebar */
@@ -262,49 +312,97 @@ header h1 {
 }
 
 .log-entry {
-    margin-bottom: 0.5rem;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 0.75rem;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--background);
     color: var(--text-secondary);
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.log-entry:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .log-entry:last-child {
-    border-bottom: none;
     margin-bottom: 0;
+}
+
+.log-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
 }
 
 .log-timestamp {
     color: var(--text-secondary);
     font-size: 0.8rem;
-    margin-right: 0.5rem;
+    font-family: 'Fira Code', 'Consolas', monospace;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    min-width: 140px;
 }
 
 .log-level {
     font-weight: 600;
-    margin-right: 0.5rem;
-    padding: 0.125rem 0.375rem;
-    border-radius: 4px;
+    padding: 0.25rem 0.75rem;
+    border-radius: 6px;
     font-size: 0.75rem;
     text-transform: uppercase;
+    letter-spacing: 0.5px;
+    min-width: 60px;
+    text-align: center;
 }
 
 .log-level.info {
     background: rgba(59, 130, 246, 0.2);
     color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.3);
 }
 
 .log-level.token {
     background: rgba(34, 197, 94, 0.2);
     color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.3);
 }
 
 .log-level.error {
     background: rgba(239, 68, 68, 0.2);
     color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
 .log-message {
     color: var(--text-primary);
+    line-height: 1.6;
+    font-size: 0.9rem;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 4px;
+    border-left: 3px solid var(--border-color);
+}
+
+/* Special styling for token messages */
+.log-entry:has(.log-level.token) .log-message {
+    border-left-color: #4ade80;
+    background: rgba(34, 197, 94, 0.05);
+}
+
+.log-entry:has(.log-level.info) .log-message {
+    border-left-color: #60a5fa;
+    background: rgba(59, 130, 246, 0.05);
+}
+
+.log-entry:has(.log-level.error) .log-message {
+    border-left-color: #f87171;
+    background: rgba(239, 68, 68, 0.05);
 }
 
 /* Chat Messages */
@@ -394,40 +492,67 @@ header h1 {
 
 /* Collapsible Sources */
 .sources-collapsible {
-    margin-top: 0.5rem;
-    font-size: 0.75rem;
+    margin-top: 0.75rem;
+    font-size: 0.8rem;
     color: var(--text-secondary);
+    border: 1px solid rgba(65, 105, 225, 0.2);
+    border-radius: 6px;
+    background: rgba(65, 105, 225, 0.05);
 }
 
 .sources-collapsible summary {
     cursor: pointer;
-    padding: 0.25rem 0.5rem;
+    padding: 0.5rem 0.75rem;
     user-select: none;
-    font-weight: 500;
+    font-weight: 600;
+    border-radius: 6px 6px 0 0;
+    background: rgba(65, 105, 225, 0.1);
+    transition: all 0.2s ease;
 }
 
 .sources-collapsible summary:hover {
     color: var(--text-primary);
+    background: rgba(65, 105, 225, 0.15);
 }
 
 .sources-collapsible[open] summary {
-    margin-bottom: 0.25rem;
+    margin-bottom: 0;
+    border-bottom: 1px solid rgba(65, 105, 225, 0.2);
+    border-radius: 6px 6px 0 0;
 }
 
 .sources-content {
-    padding: 0 0.5rem 0.25rem 1.5rem;
+    padding: 0.75rem;
     color: var(--text-secondary);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.source-item {
+    padding: 0.4rem 0.6rem;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 4px;
+    border-left: 3px solid var(--primary-color);
+    transition: all 0.2s ease;
+}
+
+.source-item:hover {
+    background: rgba(255, 255, 255, 0.9);
+    transform: translateX(2px);
 }
 
 .sources-content a {
     color: var(--primary-color);
     text-decoration: none;
+    font-weight: 500;
     transition: color 0.2s ease;
+    display: block;
 }
 
 .sources-content a:hover {
     color: var(--primary-hover);
-    text-decoration: underline;
+    text-decoration: none;
 }
 
 /* Markdown formatting styles */
@@ -630,37 +755,39 @@ header h1 {
     margin: 0.5rem 0;
 }
 
-/* New Chat Button */
+/* New Chat Button - styled to match sidebar headers */
 .new-chat-button {
     width: 100%;
-    background: var(--primary-color);
-    color: white;
+    background: none;
+    color: var(--text-secondary);
     border: none;
-    border-radius: var(--radius);
-    padding: 0.75rem 1rem;
+    padding: 0.5rem 0;
     font-size: 0.875rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: var(--shadow);
+    transition: color 0.2s ease;
+    text-align: left;
+    display: flex;
+    align-items: center;
+}
+
+.new-chat-button::before {
+    content: '+';
+    display: inline-block;
+    margin-right: 0.5rem;
+    font-size: 1rem;
+    font-weight: bold;
 }
 
 .new-chat-button:hover {
-    background: var(--primary-hover);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 12px -2px rgba(0, 0, 0, 0.4);
-}
-
-.new-chat-button:active {
-    transform: translateY(0);
-    box-shadow: var(--shadow);
+    color: var(--primary-color);
 }
 
 .new-chat-button:focus {
-    outline: 2px solid var(--focus-ring);
-    outline-offset: 2px;
+    color: var(--primary-color);
+    outline: none;
 }
 
 /* Sidebar Headers */
@@ -858,6 +985,10 @@ details[open] .suggested-header::before {
         flex-direction: column;
     }
     
+    .sidebar-toggle {
+        display: none;
+    }
+    
     .sidebar {
         width: 100%;
         border-right: none;
@@ -865,6 +996,8 @@ details[open] .suggested-header::before {
         padding: 1rem;
         order: 2;
         max-height: 40vh;
+        transform: none;
+        opacity: 1;
     }
     
     .sidebar::-webkit-scrollbar {

@@ -124,6 +124,91 @@ class CourseSearchTool(Tool):
         
         return "\n\n".join(formatted)
 
+
+class CourseOutlineTool(Tool):
+    """Tool for getting course outlines with lesson lists"""
+    
+    def __init__(self, vector_store: VectorStore):
+        self.store = vector_store
+    
+    def get_tool_definition(self) -> Dict[str, Any]:
+        """Return Anthropic tool definition for this tool"""
+        return {
+            "name": "get_course_outline",
+            "description": "Get complete course outline with ALL lesson numbers and titles - use for outline, structure, lesson list questions",
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "course_title": {
+                        "type": "string",
+                        "description": "Course title (partial matches work, e.g. 'MCP', 'Introduction')"
+                    }
+                },
+                "required": ["course_title"]
+            }
+        }
+    
+    def execute(self, course_title: str) -> str:
+        """
+        Execute the course outline tool with given course title.
+        
+        Args:
+            course_title: Course title to find outline for
+            
+        Returns:
+            Formatted course outline or error message
+        """
+        try:
+            # Get all courses metadata
+            all_courses = self.store.get_all_courses_metadata()
+            
+            if not all_courses:
+                return "No courses found in the system."
+            
+            # Find matching course (case-insensitive partial match)
+            matching_course = None
+            course_title_lower = course_title.lower()
+            
+            for course in all_courses:
+                course_name = course.get('title', '').lower()
+                if course_title_lower in course_name or course_name in course_title_lower:
+                    matching_course = course
+                    break
+            
+            if not matching_course:
+                available_courses = [course.get('title', 'Unknown') for course in all_courses]
+                return f"Course '{course_title}' not found. Available courses: {', '.join(available_courses)}"
+            
+            # Format the course outline
+            return self._format_course_outline(matching_course)
+            
+        except Exception as e:
+            return f"Error retrieving course outline: {str(e)}"
+    
+    def _format_course_outline(self, course: Dict[str, Any]) -> str:
+        """Format course outline for display"""
+        title = course.get('title', 'Unknown Course')
+        link = course.get('course_link', 'No link available')
+        instructor = course.get('instructor', 'Unknown')
+        lessons = course.get('lessons', [])
+        
+        # Build the formatted outline
+        outline = f"**Course Title:** {title}\n"
+        outline += f"**Course Link:** {link}\n"
+        outline += f"**Instructor:** {instructor}\n\n"
+        
+        if lessons:
+            outline += "**Lessons:**\n"
+            for lesson in lessons:
+                lesson_num = lesson.get('lesson_number', 'N/A')
+                lesson_title = lesson.get('lesson_title', 'Untitled')
+                outline += f"Lesson {lesson_num}: {lesson_title}\n"
+        else:
+            outline += "No lessons found for this course."
+        
+        return outline
+
+
 class ToolManager:
     """Manages available tools for the AI"""
     

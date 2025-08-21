@@ -21,27 +21,34 @@ class LLMProvider(ABC):
 class AnthropicProvider(LLMProvider):
     """Anthropic Claude provider implementation"""
     
-    SYSTEM_PROMPT = """ You are an AI assistant specialized in course materials and educational content with access to a comprehensive search tool for course information.
+    SYSTEM_PROMPT = """ You are an AI assistant specialized in course materials and educational content with access to tools for course information.
 
-Search Tool Usage:
-- Use the search tool **only** for questions about specific course content or detailed educational materials
-- **One search per query maximum**
-- Synthesize search results into accurate, fact-based responses
-- If search yields no results, state this clearly without offering alternatives
+Tool Usage:
+- Use **get_course_outline** when users ask for:
+  * Course outlines, lesson lists, course structure, or lesson titles
+  * Words like "outline", "lessons", "structure", "list of lessons", "course content overview"
+  * Complete course information including all lesson numbers and titles
+- Use **search_course_content** for:
+  * Specific content within lessons
+  * Technical details, explanations, or concepts from course materials
+  * Questions about what is taught in specific lessons
+- **One tool call per query maximum**
+- Synthesize tool results into accurate, fact-based responses
+- If tool yields no results, state this clearly without offering alternatives
 
 Response Protocol:
-- **General knowledge questions**: Answer using existing knowledge without searching
-- **Course-specific questions**: Search first, then answer
+- **General knowledge questions**: Answer using existing knowledge without tools
+- **Course outline/structure questions**: Use get_course_outline tool first, then return the COMPLETE FORMATTED OUTPUT from the tool including course title, course link, instructor, and every single lesson number with its title
+- **Course content questions**: Use search_course_content tool first, then answer
 - **No meta-commentary**:
- - Provide direct answers only — no reasoning process, search explanations, or question-type analysis
- - Do not mention "based on the search results"
-
+ - Provide direct answers only — no reasoning process, tool explanations, or question-type analysis
+ - Do not mention "based on the search results" or "based on the tool results"
 
 All responses must be:
-1. **Brief, Concise and focused** - Get to the point quickly
+1. **Brief and focused** for general questions - EXCEPT for course outline questions where you must provide complete detailed information
 2. **Educational** - Maintain instructional value
 3. **Clear** - Use accessible language
-4. **Example-supported** - Include relevant examples when they aid understanding
+4. **Complete** - For course outlines, include ALL lesson details exactly as provided by the tool
 Provide only the direct answer to what was asked.
 """
     
@@ -109,10 +116,19 @@ Provide only the direct answer to what was asked.
         tool_results = []
         for content_block in initial_response.content:
             if content_block.type == "tool_use":
-                tool_result = tool_manager.execute_tool(
-                    content_block.name, 
-                    **content_block.input
-                )
+                try:
+                    # Handle case where input might be None or invalid
+                    tool_input = content_block.input or {}
+                    if not isinstance(tool_input, dict):
+                        tool_input = {}
+                    
+                    tool_result = tool_manager.execute_tool(
+                        content_block.name, 
+                        **tool_input
+                    )
+                except Exception as e:
+                    # Handle tool execution errors gracefully
+                    tool_result = f"Error executing tool {content_block.name}: {str(e)}"
                 
                 tool_results.append({
                     "type": "tool_result",

@@ -5,7 +5,7 @@ const API_URL = '/api';
 let currentSessionId = null;
 
 // DOM elements
-let chatMessages, chatInput, sendButton, totalCourses, courseTitles, newChatButton, logMessages, clearLogsButton;
+let chatMessages, chatInput, sendButton, totalCourses, courseTitles, newChatButton, logMessages, clearLogsButton, sidebarToggle, sidebar;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -18,6 +18,8 @@ document.addEventListener('DOMContentLoaded', () => {
     newChatButton = document.getElementById('newChatButton');
     logMessages = document.getElementById('logMessages');
     clearLogsButton = document.getElementById('clearLogsButton');
+    sidebarToggle = document.getElementById('sidebarToggle');
+    sidebar = document.getElementById('sidebar');
     
     setupEventListeners();
     createNewSession();
@@ -35,6 +37,11 @@ function setupEventListeners() {
     
     // New chat button
     newChatButton.addEventListener('click', createNewSession);
+    
+    // Sidebar toggle button
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', toggleSidebar);
+    }
     
     // Tab switching
     document.querySelectorAll('.tab-button').forEach(button => {
@@ -59,6 +66,13 @@ function setupEventListeners() {
     });
 }
 
+// Sidebar Functions
+function toggleSidebar() {
+    if (sidebar && sidebarToggle) {
+        sidebar.classList.toggle('collapsed');
+        sidebarToggle.classList.toggle('collapsed');
+    }
+}
 
 // Chat Functions
 async function sendMessage() {
@@ -141,19 +155,22 @@ function addMessage(content, type, sources = null, isWelcome = false) {
     let html = `<div class="message-content">${displayContent}</div>`;
     
     if (sources && sources.length > 0) {
-        // Process sources to create clickable links
+        // Process sources to create clickable links with shortened, more readable text
         const sourceItems = sources.map(source => {
             if (source.link) {
-                return `<a href="${source.link}" target="_blank" rel="noopener noreferrer">${source.text}</a>`;
+                // Extract and format readable lesson info from the text
+                const readableText = formatSourceText(source.text);
+                return `<div class="source-item"><a href="${source.link}" target="_blank" rel="noopener noreferrer">${readableText}</a></div>`;
             } else {
-                return source.text;
+                const readableText = formatSourceText(source.text);
+                return `<div class="source-item">${readableText}</div>`;
             }
         });
         
         html += `
             <details class="sources-collapsible">
-                <summary class="sources-header">Sources</summary>
-                <div class="sources-content">${sourceItems.join(', ')}</div>
+                <summary class="sources-header">📚 Sources (${sources.length})</summary>
+                <div class="sources-content">${sourceItems.join('')}</div>
             </details>
         `;
     }
@@ -170,6 +187,41 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+// Helper function to format source text for better readability
+function formatSourceText(sourceText) {
+    // Extract course name and lesson number from typical format:
+    // "MCP: Build Rich-Context AI Apps with Anthropic - Lesson X" or similar
+    
+    // First, try to extract lesson number
+    const lessonMatch = sourceText.match(/(?:lesson|module)\s*(\d+)/i);
+    const lessonNumber = lessonMatch ? lessonMatch[1] : null;
+    
+    // Try to extract course name (usually everything before the first " - ")
+    const parts = sourceText.split(' - ');
+    let courseName = parts[0];
+    
+    // Shorten common long course names
+    courseName = courseName
+        .replace(/^MCP:\s*Build Rich-Context AI Apps with Anthropic$/i, 'MCP Course')
+        .replace(/^MCP:\s*Build Rich-Context AI Apps with Anthropic/i, 'MCP Course')
+        .replace(/Course Materials?/i, '')
+        .trim();
+    
+    // Format the result
+    if (lessonNumber) {
+        return `${courseName} → Lesson ${lessonNumber}`;
+    } else if (parts.length > 1) {
+        // If there's additional info after the dash, use it
+        const additionalInfo = parts.slice(1).join(' - ').trim();
+        if (additionalInfo && additionalInfo !== courseName) {
+            return `${courseName} → ${additionalInfo}`;
+        }
+    }
+    
+    // Fallback: return the original text if it's already short, otherwise truncate
+    return sourceText.length > 50 ? `${courseName}...` : sourceText;
 }
 
 // Removed removeMessage function - no longer needed since we handle loading differently
@@ -268,9 +320,11 @@ async function loadLogs() {
                 const timestamp = new Date(log.timestamp).toLocaleString();
                 return `
                     <div class="log-entry">
-                        <span class="log-timestamp">${timestamp}</span>
-                        <span class="log-level ${log.level}">${log.level}</span>
-                        <span class="log-message">${escapeHtml(log.message)}</span>
+                        <div class="log-header">
+                            <span class="log-timestamp">${timestamp}</span>
+                            <span class="log-level ${log.level}">${log.level}</span>
+                        </div>
+                        <div class="log-message">${escapeHtml(log.message)}</div>
                     </div>
                 `;
             }).join('');
