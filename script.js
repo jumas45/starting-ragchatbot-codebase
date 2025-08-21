@@ -171,7 +171,8 @@ class RAGChatbot {
     async loadInitialData() {
         await Promise.all([
             this.loadCourseAnalytics(),
-            this.loadSessionLogs()
+            this.loadSessionLogs(),
+            this.loadSampleQuestions()
         ]);
     }
 
@@ -256,6 +257,47 @@ class RAGChatbot {
             await this.loadSessionLogs();
         } catch (error) {
             console.error('Error clearing logs:', error);
+        }
+    }
+
+    async loadSampleQuestions() {
+        try {
+            const response = await fetch('/api/sample-questions');
+            const data = await response.json();
+            
+            const questionsContainer = document.getElementById('sampleQuestions');
+            if (questionsContainer) {
+                let questionsHTML = '<h4>Sample Questions</h4>';
+                
+                if (data && data.length > 0) {
+                    questionsHTML += '<div class="sample-questions-grid">';
+                    data.forEach(question => {
+                        questionsHTML += `<button class="sample-question" onclick="chatbot.fillQuestion('${question.question.replace(/'/g, "\\'")}')">`;
+                        questionsHTML += `<span class="category">${question.category}</span>`;
+                        questionsHTML += `${question.question}`;
+                        questionsHTML += `</button>`;
+                    });
+                    questionsHTML += '</div>';
+                } else {
+                    questionsHTML += 'No sample questions available';
+                }
+                
+                questionsContainer.innerHTML = questionsHTML;
+            }
+        } catch (error) {
+            console.error('Error loading sample questions:', error);
+            const questionsContainer = document.getElementById('sampleQuestions');
+            if (questionsContainer) {
+                questionsContainer.innerHTML = '<h4>Sample Questions</h4>Error loading sample questions';
+            }
+        }
+    }
+
+    fillQuestion(question) {
+        const messageInput = document.getElementById('messageInput');
+        if (messageInput) {
+            messageInput.value = question;
+            messageInput.focus();
         }
     }
 }
