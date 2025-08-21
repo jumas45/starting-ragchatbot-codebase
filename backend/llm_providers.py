@@ -3,6 +3,7 @@ from typing import List, Optional, Dict, Any
 import anthropic
 import google.generativeai as genai
 import json
+from session_logger import session_logger
 
 
 class LLMProvider(ABC):
@@ -83,6 +84,12 @@ Provide only the direct answer to what was asked.
         # Get response from Claude
         response = self.client.messages.create(**api_params)
         
+        # Log token usage
+        if hasattr(response, 'usage'):
+            token_msg = f"ANTHROPIC TOKENS - Input: {response.usage.input_tokens}, Output: {response.usage.output_tokens}"
+            print(token_msg)
+            session_logger.token(token_msg, provider="anthropic", input_tokens=response.usage.input_tokens, output_tokens=response.usage.output_tokens)
+        
         # Handle tool execution if needed
         if response.stop_reason == "tool_use" and tool_manager:
             return self._handle_tool_execution(response, api_params, tool_manager)
@@ -126,6 +133,13 @@ Provide only the direct answer to what was asked.
         
         # Get final response
         final_response = self.client.messages.create(**final_params)
+        
+        # Log token usage for final response
+        if hasattr(final_response, 'usage'):
+            token_msg = f"ANTHROPIC TOKENS (final) - Input: {final_response.usage.input_tokens}, Output: {final_response.usage.output_tokens}"
+            print(token_msg)
+            session_logger.token(token_msg, provider="anthropic", input_tokens=final_response.usage.input_tokens, output_tokens=final_response.usage.output_tokens, stage="final")
+        
         return final_response.content[0].text
 
 
@@ -186,6 +200,13 @@ If you don't find relevant content in the search results, then provide general k
             print("Gemini called WITHOUT tools")
             response = self.model.generate_content(full_prompt)
             print(f"Gemini Response received: {type(response)}")
+            
+            # Log token usage
+            if hasattr(response, 'usage_metadata'):
+                token_msg = f"GEMINI TOKENS - Input: {response.usage_metadata.prompt_token_count}, Output: {response.usage_metadata.candidates_token_count}"
+                print(token_msg)
+                session_logger.token(token_msg, provider="gemini", input_tokens=response.usage_metadata.prompt_token_count, output_tokens=response.usage_metadata.candidates_token_count)
+            
             return response.text
         except Exception as e:
             print(f"Gemini Error: {e}")
@@ -215,6 +236,12 @@ If you don't find relevant content in the search results, then provide general k
             # Generate response with tools
             response = model_with_tools.generate_content(prompt)
             print(f"Gemini response candidates: {len(response.candidates) if response.candidates else 0}")
+            
+            # Log token usage for initial response
+            if hasattr(response, 'usage_metadata'):
+                token_msg = f"GEMINI TOKENS (with tools) - Input: {response.usage_metadata.prompt_token_count}, Output: {response.usage_metadata.candidates_token_count}"
+                print(token_msg)
+                session_logger.token(token_msg, provider="gemini", input_tokens=response.usage_metadata.prompt_token_count, output_tokens=response.usage_metadata.candidates_token_count, stage="with_tools")
             
             # Check if tools were called
             if response.candidates and response.candidates[0].content.parts:
@@ -308,6 +335,13 @@ If you don't find relevant content in the search results, then provide general k
                     
                     # Get final response without tools
                     final_response = self.model.generate_content(follow_up_prompt)
+                    
+                    # Log token usage for final response
+                    if hasattr(final_response, 'usage_metadata'):
+                        token_msg = f"GEMINI TOKENS (final) - Input: {final_response.usage_metadata.prompt_token_count}, Output: {final_response.usage_metadata.candidates_token_count}"
+                        print(token_msg)
+                        session_logger.token(token_msg, provider="gemini", input_tokens=final_response.usage_metadata.prompt_token_count, output_tokens=final_response.usage_metadata.candidates_token_count, stage="final")
+                    
                     return final_response.text
             
             # No tools called, return original response
@@ -318,6 +352,13 @@ If you don't find relevant content in the search results, then provide general k
             # Fall back to non-tool response
             try:
                 response = self.model.generate_content(prompt)
+                
+                # Log token usage for fallback response
+                if hasattr(response, 'usage_metadata'):
+                    token_msg = f"GEMINI TOKENS (fallback) - Input: {response.usage_metadata.prompt_token_count}, Output: {response.usage_metadata.candidates_token_count}"
+                    print(token_msg)
+                    session_logger.token(token_msg, provider="gemini", input_tokens=response.usage_metadata.prompt_token_count, output_tokens=response.usage_metadata.candidates_token_count, stage="fallback")
+                
                 return response.text
             except Exception as fallback_error:
                 print(f"Gemini Fallback Error: {fallback_error}")

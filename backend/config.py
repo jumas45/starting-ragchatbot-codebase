@@ -13,7 +13,7 @@ class Config:
     
     # Anthropic API settings
     ANTHROPIC_API_KEY: str = os.getenv("ANTHROPIC_API_KEY", "")
-    ANTHROPIC_MODEL: str = "claude-sonnet-4-20250514"
+    ANTHROPIC_MODEL: str = "claude-3-5-haiku-20241022"
     
     # Google Gemini API settings
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")

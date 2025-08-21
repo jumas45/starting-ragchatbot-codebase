@@ -11,6 +11,7 @@ import os
 
 from config import config
 from rag_system import RAGSystem
+from session_logger import session_logger
 
 # Initialize FastAPI app
 app = FastAPI(title="Course Materials RAG System", root_path="")
@@ -56,6 +57,12 @@ class CourseStats(BaseModel):
     total_courses: int
     course_titles: List[str]
 
+class LogEntry(BaseModel):
+    """Model for log entries"""
+    timestamp: str
+    level: str
+    message: str
+
 # API Endpoints
 
 @app.post("/api/query", response_model=QueryResponse)
@@ -66,6 +73,9 @@ async def query_documents(request: QueryRequest):
         session_id = request.session_id
         if not session_id:
             session_id = rag_system.session_manager.create_session()
+        
+        # Log the incoming query
+        session_logger.info(f"Processing query: {request.query[:100]}{'...' if len(request.query) > 100 else ''}")
         
         # Process query using RAG system
         answer, sources = rag_system.query(request.query, session_id)
@@ -99,17 +109,41 @@ async def get_course_stats():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/api/logs", response_model=List[LogEntry])
+async def get_logs():
+    """Get session logs"""
+    try:
+        logs = session_logger.get_logs()
+        return [LogEntry(timestamp=log["timestamp"], level=log["level"], message=log["message"]) for log in logs]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/logs/clear")
+async def clear_logs():
+    """Clear session logs"""
+    try:
+        session_logger.clear_logs()
+        return {"message": "Logs cleared successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.on_event("startup")
 async def startup_event():
     """Load initial documents on startup"""
+    session_logger.info("RAG System starting up...")
     docs_path = "../docs"
     if os.path.exists(docs_path):
         print("Loading initial documents...")
+        session_logger.info("Loading initial documents...")
         try:
             courses, chunks = rag_system.add_course_folder(docs_path, clear_existing=False)
-            print(f"Loaded {courses} courses with {chunks} chunks")
+            msg = f"Loaded {courses} courses with {chunks} chunks"
+            print(msg)
+            session_logger.info(msg)
         except Exception as e:
-            print(f"Error loading documents: {e}")
+            error_msg = f"Error loading documents: {e}"
+            print(error_msg)
+            session_logger.error(error_msg)
 
 # Custom static file handler with no-cache headers for development
 from fastapi.staticfiles import StaticFiles

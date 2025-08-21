@@ -5,7 +5,7 @@ const API_URL = '/api';
 let currentSessionId = null;
 
 // DOM elements
-let chatMessages, chatInput, sendButton, totalCourses, courseTitles, newChatButton;
+let chatMessages, chatInput, sendButton, totalCourses, courseTitles, newChatButton, logMessages, clearLogsButton;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -16,10 +16,13 @@ document.addEventListener('DOMContentLoaded', () => {
     totalCourses = document.getElementById('totalCourses');
     courseTitles = document.getElementById('courseTitles');
     newChatButton = document.getElementById('newChatButton');
+    logMessages = document.getElementById('logMessages');
+    clearLogsButton = document.getElementById('clearLogsButton');
     
     setupEventListeners();
     createNewSession();
     loadCourseStats();
+    loadLogs();
 });
 
 // Event Listeners
@@ -32,6 +35,19 @@ function setupEventListeners() {
     
     // New chat button
     newChatButton.addEventListener('click', createNewSession);
+    
+    // Tab switching
+    document.querySelectorAll('.tab-button').forEach(button => {
+        button.addEventListener('click', (e) => {
+            const tabName = e.target.getAttribute('data-tab');
+            switchTab(tabName);
+        });
+    });
+    
+    // Clear logs button
+    if (clearLogsButton) {
+        clearLogsButton.addEventListener('click', clearLogs);
+    }
     
     // Suggested questions
     document.querySelectorAll('.suggested-item').forEach(button => {
@@ -214,3 +230,86 @@ async function loadCourseStats() {
         }
     }
 }
+
+// Tab Functions
+function switchTab(tabName) {
+    // Update tab buttons
+    document.querySelectorAll('.tab-button').forEach(button => {
+        button.classList.remove('active');
+    });
+    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+    
+    // Update tab content
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    document.getElementById(`${tabName}Tab`).classList.add('active');
+    
+    // Load logs if switching to logs tab
+    if (tabName === 'logs') {
+        loadLogs();
+    }
+}
+
+// Log Functions
+async function loadLogs() {
+    if (!logMessages) return;
+    
+    try {
+        const response = await fetch(`${API_URL}/logs`);
+        if (!response.ok) throw new Error('Failed to load logs');
+        
+        const logs = await response.json();
+        
+        if (logs.length === 0) {
+            logMessages.innerHTML = '<div class="log-entry">No logs available</div>';
+        } else {
+            logMessages.innerHTML = logs.map(log => {
+                const timestamp = new Date(log.timestamp).toLocaleString();
+                return `
+                    <div class="log-entry">
+                        <span class="log-timestamp">${timestamp}</span>
+                        <span class="log-level ${log.level}">${log.level}</span>
+                        <span class="log-message">${escapeHtml(log.message)}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Auto scroll to bottom
+        logMessages.scrollTop = logMessages.scrollHeight;
+        
+    } catch (error) {
+        console.error('Error loading logs:', error);
+        if (logMessages) {
+            logMessages.innerHTML = '<div class="log-entry error">Failed to load logs</div>';
+        }
+    }
+}
+
+async function clearLogs() {
+    try {
+        const response = await fetch(`${API_URL}/logs/clear`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        
+        if (!response.ok) throw new Error('Failed to clear logs');
+        
+        // Reload logs to show empty state
+        loadLogs();
+        
+    } catch (error) {
+        console.error('Error clearing logs:', error);
+    }
+}
+
+// Auto-refresh logs every 2 seconds when on logs tab
+setInterval(() => {
+    const logsTab = document.getElementById('logsTab');
+    if (logsTab && logsTab.classList.contains('active')) {
+        loadLogs();
+    }
+}, 2000);
