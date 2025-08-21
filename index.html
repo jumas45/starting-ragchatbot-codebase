@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG Chatbot</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="header">
+        <h1 class="header-title">RAG Chatbot</h1>
+        <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+            <svg class="theme-icon theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+            <svg class="theme-icon theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+        </button>
+    </header>
+
+    <main class="main-container">
+        <div class="chat-container">
+            <div class="messages" id="messages">
+                <div class="message assistant-message">
+                    <div class="message-content">
+                        Hello! I'm your RAG chatbot assistant. Ask me anything about the available courses and content.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="input-container">
+                <div class="input-wrapper">
+                    <input type="text" id="messageInput" placeholder="Ask a question..." class="message-input">
+                    <button id="sendButton" class="send-button" aria-label="Send message">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <div class="sidebar-section">
+                <h3>Course Analytics</h3>
+                <div id="courseAnalytics" class="analytics-content">
+                    Loading...
+                </div>
+            </div>
+            
+            <div class="sidebar-section">
+                <h3>Session Logs</h3>
+                <div id="sessionLogs" class="logs-content">
+                    <button id="clearLogsButton" class="clear-logs-button">Clear Logs</button>
+                    <div id="logsContainer">
+                        Loading...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
