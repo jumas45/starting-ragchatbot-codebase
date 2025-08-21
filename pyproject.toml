@@ -1,9 +1,18 @@
 [project]
-name = "ragchatbot"
-version = "0.1.0"
-description = "RAG Chatbot with code quality tools"
+name = "rag-system"
+version = "1.0.0"
+description = "RAG System with FastAPI backend and code quality tools"
 requires-python = ">=3.8"
-dependencies = []
+dependencies = [
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+    "pydantic>=2.4.0",
+    "python-multipart>=0.0.6",
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "httpx>=0.25.0",
+    "pytest-cov>=4.1.0",
+]
 
 [tool.black]
 line-length = 88
@@ -34,6 +43,32 @@ multi_line_output = 3
 max-line-length = 88
 extend-ignore = ["E203", "W503"]
 
+[tool.pytest.ini_options]
+testpaths = ["backend/tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--strict-markers",
+    "--strict-config",
+    "--tb=short",
+    "--cov=backend",
+    "--cov-report=term-missing",
+    "--cov-report=html:coverage_html",
+]
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "api: API endpoint tests",
+    "slow: Slow running tests",
+]
+asyncio_mode = "auto"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
+
 [dependency-groups]
 dev = [
     "black>=24.8.0",
@@ -41,4 +76,3 @@ dev = [
     "isort>=5.13.2",
     "mypy>=1.14.1",
 ]
-
