@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git clone:*)",
+      "Bash(git add:*)",
+      "WebFetch(domain:docs.anthropic.com)",
+      "Bash(uv sync:*)",
+      "Bash(uv run:*)",
+      "Bash(git init:*)",
+      "Bash(git commit:*)",
+      "Bash(git tag:*)",
+      "Bash(rm:*)",
+      "Bash(git push:*)",
+      "Bash(curl:*)",
+      "Bash(start http://localhost:8000)",
+      "Bash(mkdir:*)",
+      "Bash(move test_gemini.py test )",
+      "Bash(move backendtest_*.py test)",
+      "Bash(mv:*)",
+      "WebSearch",
+      "Bash(claude --version)",
+      "Bash(claude update)",
+      "Bash(claude mcp add:*)",
+      "Bash(npm i:*)",
+      "Bash(uv add:*)",
+      "Bash(start:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

@@ -1,0 +1,3 @@
+- always use uv to run the server do not use pip directly
+- use uv to manage all my dependencies
+- do not ask me to approve every write.
