@@ -260,6 +260,12 @@ header h1 {
     margin: 0;
 }
 
+.logs-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.refresh-logs-button,
 .clear-logs-button {
     padding: 0.5rem 1rem;
     background: var(--surface);
@@ -271,14 +277,27 @@ header h1 {
     transition: all 0.2s ease;
 }
 
+.refresh-logs-button:hover,
 .clear-logs-button:hover {
     background: var(--surface-hover);
     color: var(--text-primary);
 }
 
+.refresh-logs-button:focus,
 .clear-logs-button:focus {
     outline: none;
     box-shadow: 0 0 0 2px var(--focus-ring);
+}
+
+.refresh-logs-button {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.refresh-logs-button:hover {
+    background: var(--primary-hover);
+    border-color: var(--primary-hover);
 }
 
 /* Log Messages */

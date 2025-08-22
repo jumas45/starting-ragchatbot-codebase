@@ -5,7 +5,7 @@ const API_URL = '/api';
 let currentSessionId = null;
 
 // DOM elements
-let chatMessages, chatInput, sendButton, totalCourses, courseTitles, newChatButton, logMessages, clearLogsButton, sidebarToggle, sidebar;
+let chatMessages, chatInput, sendButton, totalCourses, courseTitles, newChatButton, logMessages, clearLogsButton, refreshLogsButton, sidebarToggle, sidebar;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     newChatButton = document.getElementById('newChatButton');
     logMessages = document.getElementById('logMessages');
     clearLogsButton = document.getElementById('clearLogsButton');
+    refreshLogsButton = document.getElementById('refreshLogsButton');
     sidebarToggle = document.getElementById('sidebarToggle');
     sidebar = document.getElementById('sidebar');
     
@@ -54,6 +55,11 @@ function setupEventListeners() {
     // Clear logs button
     if (clearLogsButton) {
         clearLogsButton.addEventListener('click', clearLogs);
+    }
+    
+    // Refresh logs button
+    if (refreshLogsButton) {
+        refreshLogsButton.addEventListener('click', refreshLogs);
     }
     
     // Suggested questions
@@ -360,10 +366,7 @@ async function clearLogs() {
     }
 }
 
-// Auto-refresh logs every 2 seconds when on logs tab
-setInterval(() => {
-    const logsTab = document.getElementById('logsTab');
-    if (logsTab && logsTab.classList.contains('active')) {
-        loadLogs();
-    }
-}, 2000);
+// Refresh logs function (manual refresh only)
+function refreshLogs() {
+    loadLogs();
+}

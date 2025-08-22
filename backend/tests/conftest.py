@@ -12,7 +12,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from config import Config
 from vector_store import VectorStore, SearchResults
-from search_tools import CourseSearchTool, CourseOutlineTool
+from search_tools import CourseSearchTool, CourseOutlineTool, ToolManager
 from ai_generator import AIGenerator
 from rag_system import RAGSystem
 
@@ -136,3 +136,14 @@ def mock_ai_generator(mock_anthropic_client):
         generator = AIGenerator("anthropic", "test-key", "claude-3-sonnet-20240229")
     
     return generator
+
+
+@pytest.fixture
+def tool_manager_with_search(mock_vector_store):
+    """Create a tool manager with search and outline tools"""
+    manager = ToolManager()
+    search_tool = CourseSearchTool(mock_vector_store)
+    outline_tool = CourseOutlineTool(mock_vector_store)
+    manager.register_tool(search_tool)
+    manager.register_tool(outline_tool)
+    return manager
