@@ -46,10 +46,37 @@
             </div>
         </div>
 
-        <div class="sidebar">
+        <div class="sidebar" id="sidebar">
+            <div class="resize-handle" id="resizeHandle">
+                <div class="resize-handle-icon">
+                    <div class="resize-dots"></div>
+                </div>
+            </div>
             <div class="sidebar-tabs">
-                <button class="tab-button active" data-tab="analytics">Course Analytics</button>
-                <button class="tab-button" data-tab="logs">Session Logs</button>
+                <button class="tab-button active" data-tab="analytics">
+                    <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M9 19c-5 0-8-3-8-8s3-8 8-8 8 3 8 8-3 8-8 8z"/>
+                        <path d="M19 19l-2-2"/>
+                    </svg>
+                    Analytics
+                </button>
+                <button class="tab-button" data-tab="logs">
+                    <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <path d="M14 2v6h6"/>
+                        <path d="M16 13H8"/>
+                        <path d="M16 17H8"/>
+                        <path d="M10 9H8"/>
+                    </svg>
+                    Logs
+                </button>
+                <button class="tab-button" data-tab="settings">
+                    <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                    </svg>
+                    Settings
+                </button>
             </div>
             
             <div class="tab-content">
@@ -64,6 +91,187 @@
                         <button id="clearLogsButton" class="clear-logs-button">Clear Logs</button>
                         <div id="logsContainer">
                             Loading...
+                        </div>
+                    </div>
+                </div>
+
+                <div id="settings-tab" class="tab-panel">
+                    <div class="settings-content">
+                        <div class="settings-section">
+                            <h3 class="settings-section-title">
+                                <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                                </svg>
+                                Appearance
+                            </h3>
+                            <div class="settings-group">
+                                <div class="setting-item">
+                                    <label class="setting-label">
+                                        <span class="setting-name">Theme</span>
+                                        <span class="setting-description">Choose your preferred color scheme</span>
+                                    </label>
+                                    <div class="theme-selector">
+                                        <button class="theme-option" data-theme="light">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                <circle cx="12" cy="12" r="5"/>
+                                                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                                            </svg>
+                                            Light
+                                        </button>
+                                        <button class="theme-option active" data-theme="dark">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                                            </svg>
+                                            Dark
+                                        </button>
+                                        <button class="theme-option" data-theme="auto">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                                                <path d="M8 21l4-4 4 4"/>
+                                            </svg>
+                                            Auto
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="settings-section">
+                            <h3 class="settings-section-title">
+                                <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>
+                                </svg>
+                                Chat Settings
+                            </h3>
+                            <div class="settings-group">
+                                <div class="setting-item">
+                                    <label class="setting-label">
+                                        <span class="setting-name">Auto-scroll to new messages</span>
+                                        <span class="setting-description">Automatically scroll to bottom when new messages arrive</span>
+                                    </label>
+                                    <div class="toggle-switch">
+                                        <input type="checkbox" id="autoScroll" checked>
+                                        <label for="autoScroll" class="toggle-label"></label>
+                                    </div>
+                                </div>
+                                <div class="setting-item">
+                                    <label class="setting-label">
+                                        <span class="setting-name">Show message timestamps</span>
+                                        <span class="setting-description">Display time when each message was sent</span>
+                                    </label>
+                                    <div class="toggle-switch">
+                                        <input type="checkbox" id="showTimestamps">
+                                        <label for="showTimestamps" class="toggle-label"></label>
+                                    </div>
+                                </div>
+                                <div class="setting-item">
+                                    <label class="setting-label">
+                                        <span class="setting-name">Typing indicators</span>
+                                        <span class="setting-description">Show when the assistant is thinking</span>
+                                    </label>
+                                    <div class="toggle-switch">
+                                        <input type="checkbox" id="typingIndicators" checked>
+                                        <label for="typingIndicators" class="toggle-label"></label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="settings-section">
+                            <h3 class="settings-section-title">
+                                <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M9 12l2 2 4-4"/>
+                                    <path d="M21 12c-1 0-3-1-3-3s2-3 3-3 3 1 3 3-2 3-3 3"/>
+                                    <path d="M3 12c1 0 3-1 3-3s-2-3-3-3-3 1-3 3 2 3 3 3"/>
+                                    <path d="M13 12h-2a3 3 0 0 0 0 6h2a3 3 0 0 0 0-6z"/>
+                                </svg>
+                                Accessibility
+                            </h3>
+                            <div class="settings-group">
+                                <div class="setting-item">
+                                    <label class="setting-label">
+                                        <span class="setting-name">Reduced motion</span>
+                                        <span class="setting-description">Minimize animations and transitions</span>
+                                    </label>
+                                    <div class="toggle-switch">
+                                        <input type="checkbox" id="reducedMotion">
+                                        <label for="reducedMotion" class="toggle-label"></label>
+                                    </div>
+                                </div>
+                                <div class="setting-item">
+                                    <label class="setting-label">
+                                        <span class="setting-name">High contrast</span>
+                                        <span class="setting-description">Increase contrast for better visibility</span>
+                                    </label>
+                                    <div class="toggle-switch">
+                                        <input type="checkbox" id="highContrast">
+                                        <label for="highContrast" class="toggle-label"></label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="settings-section">
+                            <h3 class="settings-section-title">
+                                <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/>
+                                    <path d="M16 8L2 22"/>
+                                    <path d="M17.5 15H9"/>
+                                </svg>
+                                Data & Privacy
+                            </h3>
+                            <div class="settings-group">
+                                <div class="setting-item">
+                                    <label class="setting-label">
+                                        <span class="setting-name">Save conversation history</span>
+                                        <span class="setting-description">Store conversations locally for context</span>
+                                    </label>
+                                    <div class="toggle-switch">
+                                        <input type="checkbox" id="saveHistory" checked>
+                                        <label for="saveHistory" class="toggle-label"></label>
+                                    </div>
+                                </div>
+                                <div class="setting-item">
+                                    <button class="action-button danger" id="clearAllData">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                            <path d="M3 6h18"/>
+                                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                                        </svg>
+                                        Clear All Data
+                                    </button>
+                                    <span class="setting-description">Remove all stored conversations and preferences</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="settings-section">
+                            <h3 class="settings-section-title">
+                                <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M9 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-4m-8 0V9a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m-8 0h8"/>
+                                </svg>
+                                Keyboard Shortcuts
+                            </h3>
+                            <div class="settings-group">
+                                <div class="shortcuts-list">
+                                    <div class="shortcut-item">
+                                        <span class="shortcut-description">Focus message input</span>
+                                        <kbd class="shortcut-keys">Ctrl + K</kbd>
+                                    </div>
+                                    <div class="shortcut-item">
+                                        <span class="shortcut-description">Toggle theme</span>
+                                        <kbd class="shortcut-keys">Ctrl + Shift + T</kbd>
+                                    </div>
+                                    <div class="shortcut-item">
+                                        <span class="shortcut-description">Clear input</span>
+                                        <kbd class="shortcut-keys">Escape</kbd>
+                                    </div>
+                                    <div class="shortcut-item">
+                                        <span class="shortcut-description">Send message</span>
+                                        <kbd class="shortcut-keys">Enter</kbd>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
