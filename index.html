@@ -47,19 +47,24 @@
         </div>
 
         <div class="sidebar">
-            <div class="sidebar-section">
-                <h3>Course Analytics</h3>
-                <div id="courseAnalytics" class="analytics-content">
-                    Loading...
-                </div>
+            <div class="sidebar-tabs">
+                <button class="tab-button active" data-tab="analytics">Course Analytics</button>
+                <button class="tab-button" data-tab="logs">Session Logs</button>
             </div>
             
-            <div class="sidebar-section">
-                <h3>Session Logs</h3>
-                <div id="sessionLogs" class="logs-content">
-                    <button id="clearLogsButton" class="clear-logs-button">Clear Logs</button>
-                    <div id="logsContainer">
+            <div class="tab-content">
+                <div id="analytics-tab" class="tab-panel active">
+                    <div id="courseAnalytics" class="analytics-content">
                         Loading...
+                    </div>
+                </div>
+                
+                <div id="logs-tab" class="tab-panel">
+                    <div id="sessionLogs" class="logs-content">
+                        <button id="clearLogsButton" class="clear-logs-button">Clear Logs</button>
+                        <div id="logsContainer">
+                            Loading...
+                        </div>
                     </div>
                 </div>
             </div>

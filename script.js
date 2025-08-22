@@ -84,6 +84,28 @@ class RAGChatbot {
         if (clearLogsButton) {
             clearLogsButton.addEventListener('click', () => this.clearLogs());
         }
+
+        // Tab switching functionality
+        const tabButtons = document.querySelectorAll('.tab-button');
+        tabButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                const targetTab = e.target.getAttribute('data-tab');
+                this.switchTab(targetTab);
+            });
+        });
+    }
+
+    switchTab(tabName) {
+        // Remove active class from all tab buttons and panels
+        document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+        
+        // Add active class to clicked tab button and corresponding panel
+        const targetButton = document.querySelector(`[data-tab="${tabName}"]`);
+        const targetPanel = document.getElementById(`${tabName}-tab`);
+        
+        if (targetButton) targetButton.classList.add('active');
+        if (targetPanel) targetPanel.classList.add('active');
     }
 
     async sendMessage() {
@@ -150,10 +172,13 @@ class RAGChatbot {
             messageHTML += '<div class="message-sources">';
             messageHTML += '<h4>Sources:</h4>';
             sources.forEach(source => {
-                if (source.link) {
+                // Handle both string and object sources
+                if (typeof source === 'string') {
+                    messageHTML += `<div class="source-item">${source}</div>`;
+                } else if (source.link) {
                     messageHTML += `<div class="source-item"><a href="${source.link}" class="source-link" target="_blank">${source.text}</a></div>`;
                 } else {
-                    messageHTML += `<div class="source-item">${source.text}</div>`;
+                    messageHTML += `<div class="source-item">${source.text || source}</div>`;
                 }
             });
             messageHTML += '</div>';

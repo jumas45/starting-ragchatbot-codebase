@@ -303,17 +303,65 @@ body {
 
 /* Sidebar */
 .sidebar {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.sidebar-section {
   background-color: var(--bg-secondary);
   border-radius: 12px;
-  padding: 1rem;
   box-shadow: 0 4px 12px var(--shadow);
   transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+/* Tab Navigation */
+.sidebar-tabs {
+  display: flex;
+  background-color: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.tab-button {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border-bottom: 2px solid transparent;
+}
+
+.tab-button:hover {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.tab-button.active {
+  color: var(--accent-primary);
+  background-color: var(--bg-secondary);
+  border-bottom-color: var(--accent-primary);
+}
+
+/* Tab Content */
+.tab-content {
+  flex: 1;
+}
+
+.tab-panel {
+  display: none;
+  padding: 1rem;
+  height: 100%;
+}
+
+.tab-panel.active {
+  display: block;
+}
+
+/* Legacy section styles for compatibility */
+.sidebar-section {
+  background-color: transparent;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
 }
 
 .sidebar-section h3 {
@@ -348,21 +396,56 @@ body {
   transform: translateY(-1px);
 }
 
+/* Session Logs Styling */
+.logs-list {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background-color: var(--bg-primary);
+}
+
+.log-entry {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  transition: background-color 0.2s ease;
+}
+
+.log-entry:last-child {
+  border-bottom: none;
+}
+
+.log-entry:hover {
+  background-color: var(--bg-secondary);
+}
+
+.log-entry strong {
+  color: var(--accent-primary);
+  font-weight: 600;
+}
+
 /* Scrollbar Styling */
-.messages::-webkit-scrollbar {
+.messages::-webkit-scrollbar,
+.logs-list::-webkit-scrollbar {
   width: 6px;
 }
 
-.messages::-webkit-scrollbar-track {
+.messages::-webkit-scrollbar-track,
+.logs-list::-webkit-scrollbar-track {
   background: var(--bg-primary);
 }
 
-.messages::-webkit-scrollbar-thumb {
+.messages::-webkit-scrollbar-thumb,
+.logs-list::-webkit-scrollbar-thumb {
   background: var(--border-color);
   border-radius: 3px;
 }
 
-.messages::-webkit-scrollbar-thumb:hover {
+.messages::-webkit-scrollbar-thumb:hover,
+.logs-list::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
 }
 
