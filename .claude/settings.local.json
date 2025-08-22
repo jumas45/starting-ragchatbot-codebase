@@ -23,7 +23,22 @@
       "Bash(claude mcp add:*)",
       "Bash(npm i:*)",
       "Bash(uv add:*)",
-      "Bash(start:*)"
+      "Bash(start:*)",
+      "Bash(git config:*)",
+      "Bash(gh repo create:*)",
+      "Bash(uv:*)",
+      "Bash(set UV_LINK_MODE=copy)",
+      "Bash(python:*)",
+      "Bash(taskkill:*)",
+      "Bash(wmic:*)",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_click",
+      "mcp__playwright__browser_type",
+      "Bash(cp:*)",
+      "mcp__playwright__browser_wait_for",
+      "Bash(git remote add:*)",
+      "Bash(git reset:*)"
     ],
     "deny": [],
     "ask": []

@@ -1,3 +1,4 @@
 - always use uv to run the server do not use pip directly
 - use uv to manage all my dependencies
 - do not ask me to approve every write.
+- The name to use for Github commits is jumas45 and the email to use is jumas45@gmail.com. ALWAYS REMEMBER AND APPLY.

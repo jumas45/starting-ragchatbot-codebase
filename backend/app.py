@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import List, Optional
 import os
@@ -7,10 +8,10 @@ from datetime import datetime
 
 app = FastAPI(title="RAG System API", version="1.0.0")
 
-# Mount static files only if the directory exists
-static_dir = "static"
-if os.path.exists(static_dir):
-    app.mount("/static", StaticFiles(directory=static_dir), name="static")
+# Mount static files for CSS and JS
+import os
+parent_dir = os.path.dirname(os.path.dirname(__file__))
+app.mount("/static", StaticFiles(directory=parent_dir), name="static")
 
 class QueryRequest(BaseModel):
     query: str
@@ -72,12 +73,24 @@ SAMPLE_QUESTIONS = [
 
 @app.get("/")
 async def root():
-    """Root endpoint returning API information"""
-    return {
-        "message": "RAG System API",
-        "version": "1.0.0",
-        "endpoints": ["/api/query", "/api/courses", "/"]
-    }
+    """Serve the main HTML page"""
+    import os
+    html_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "index.html")
+    return FileResponse(html_path)
+
+@app.get("/styles.css")
+async def get_styles():
+    """Serve CSS file"""
+    import os
+    css_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "styles.css")
+    return FileResponse(css_path, media_type="text/css")
+
+@app.get("/script.js")
+async def get_script():
+    """Serve JS file"""
+    import os
+    js_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "script.js")
+    return FileResponse(js_path, media_type="application/javascript")
 
 @app.post("/api/query", response_model=QueryResponse)
 async def query_endpoint(request: QueryRequest):
