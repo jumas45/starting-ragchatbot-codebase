@@ -1,372 +1,728 @@
-// API base URL - use relative path to work from any host
-const API_URL = '/api';
-
-// Global state
-let currentSessionId = null;
-
-// DOM elements
-let chatMessages, chatInput, sendButton, totalCourses, courseTitles, newChatButton, logMessages, clearLogsButton, refreshLogsButton, sidebarToggle, sidebar;
-
-// Initialize
-document.addEventListener('DOMContentLoaded', () => {
-    // Get DOM elements after page loads
-    chatMessages = document.getElementById('chatMessages');
-    chatInput = document.getElementById('chatInput');
-    sendButton = document.getElementById('sendButton');
-    totalCourses = document.getElementById('totalCourses');
-    courseTitles = document.getElementById('courseTitles');
-    newChatButton = document.getElementById('newChatButton');
-    logMessages = document.getElementById('logMessages');
-    clearLogsButton = document.getElementById('clearLogsButton');
-    refreshLogsButton = document.getElementById('refreshLogsButton');
-    sidebarToggle = document.getElementById('sidebarToggle');
-    sidebar = document.getElementById('sidebar');
-    
-    setupEventListeners();
-    createNewSession();
-    loadCourseStats();
-    loadLogs();
-});
-
-// Event Listeners
-function setupEventListeners() {
-    // Chat functionality
-    sendButton.addEventListener('click', sendMessage);
-    chatInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') sendMessage();
-    });
-    
-    // New chat button
-    newChatButton.addEventListener('click', createNewSession);
-    
-    // Sidebar toggle button
-    if (sidebarToggle) {
-        sidebarToggle.addEventListener('click', toggleSidebar);
+// Theme Management
+class ThemeManager {
+    constructor() {
+        this.init();
     }
-    
-    // Tab switching
-    document.querySelectorAll('.tab-button').forEach(button => {
-        button.addEventListener('click', (e) => {
-            const tabName = e.target.getAttribute('data-tab');
-            switchTab(tabName);
-        });
-    });
-    
-    // Clear logs button
-    if (clearLogsButton) {
-        clearLogsButton.addEventListener('click', clearLogs);
-    }
-    
-    // Refresh logs button
-    if (refreshLogsButton) {
-        refreshLogsButton.addEventListener('click', refreshLogs);
-    }
-    
-    // Suggested questions
-    document.querySelectorAll('.suggested-item').forEach(button => {
-        button.addEventListener('click', (e) => {
-            const question = e.target.getAttribute('data-question');
-            chatInput.value = question;
-            sendMessage();
-        });
-    });
-}
 
-// Sidebar Functions
-function toggleSidebar() {
-    if (sidebar && sidebarToggle) {
-        sidebar.classList.toggle('collapsed');
-        sidebarToggle.classList.toggle('collapsed');
-    }
-}
-
-// Chat Functions
-async function sendMessage() {
-    const query = chatInput.value.trim();
-    if (!query) return;
-
-    // Disable input
-    chatInput.value = '';
-    chatInput.disabled = true;
-    sendButton.disabled = true;
-
-    // Add user message
-    addMessage(query, 'user');
-
-    // Add loading message - create a unique container for it
-    const loadingMessage = createLoadingMessage();
-    chatMessages.appendChild(loadingMessage);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-
-    try {
-        const response = await fetch(`${API_URL}/query`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                query: query,
-                session_id: currentSessionId
-            })
-        });
-
-        if (!response.ok) throw new Error('Query failed');
-
-        const data = await response.json();
+    init() {
+        // Get saved theme from localStorage or default to 'dark'
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        this.setTheme(savedTheme);
         
-        // Update session ID if new
-        if (!currentSessionId) {
-            currentSessionId = data.session_id;
+        // Bind theme toggle event
+        const themeToggle = document.getElementById('themeToggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => this.toggleTheme());
+            themeToggle.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    this.toggleTheme();
+                }
+            });
+        }
+    }
+
+    setTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+        
+        // Update ARIA label for accessibility
+        const themeToggle = document.getElementById('themeToggle');
+        if (themeToggle) {
+            themeToggle.setAttribute('aria-label', 
+                theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'
+            );
+        }
+    }
+
+    toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        this.setTheme(newTheme);
+    }
+
+    getCurrentTheme() {
+        return document.documentElement.getAttribute('data-theme');
+    }
+}
+
+// RAG Chatbot Application
+class RAGChatbot {
+    constructor() {
+        this.sessionId = this.generateSessionId();
+        this.themeManager = new ThemeManager();
+        this.settingsManager = new SettingsManager(this);
+        this.resizeManager = new ResizeManager();
+        this.init();
+    }
+
+    init() {
+        this.bindEvents();
+        this.loadInitialData();
+        this.settingsManager.init();
+        this.resizeManager.init();
+    }
+
+    generateSessionId() {
+        return 'session_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+    }
+
+    bindEvents() {
+        const sendButton = document.getElementById('sendButton');
+        const messageInput = document.getElementById('messageInput');
+        const clearLogsButton = document.getElementById('clearLogsButton');
+
+        if (sendButton) {
+            sendButton.addEventListener('click', () => this.sendMessage());
         }
 
-        // Replace loading message with response
-        loadingMessage.remove();
-        addMessage(data.answer, 'assistant', data.sources);
+        if (messageInput) {
+            messageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    this.sendMessage();
+                }
+            });
+        }
 
-    } catch (error) {
-        // Replace loading message with error
-        loadingMessage.remove();
-        addMessage(`Error: ${error.message}`, 'assistant');
-    } finally {
-        chatInput.disabled = false;
-        sendButton.disabled = false;
-        chatInput.focus();
+        if (clearLogsButton) {
+            clearLogsButton.addEventListener('click', () => this.clearLogs());
+        }
+
+        // Tab switching functionality
+        const tabButtons = document.querySelectorAll('.tab-button');
+        tabButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                const targetTab = e.target.getAttribute('data-tab');
+                this.switchTab(targetTab);
+            });
+        });
     }
-}
 
-function createLoadingMessage() {
-    const messageDiv = document.createElement('div');
-    messageDiv.className = 'message assistant';
-    messageDiv.innerHTML = `
-        <div class="message-content">
-            <div class="loading">
-                <span></span>
-                <span></span>
-                <span></span>
-            </div>
-        </div>
-    `;
-    return messageDiv;
-}
+    switchTab(tabName) {
+        // Remove active class from all tab buttons and panels
+        document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+        
+        // Add active class to clicked tab button and corresponding panel
+        const targetButton = document.querySelector(`[data-tab="${tabName}"]`);
+        const targetPanel = document.getElementById(`${tabName}-tab`);
+        
+        if (targetButton) targetButton.classList.add('active');
+        if (targetPanel) targetPanel.classList.add('active');
+    }
 
-function addMessage(content, type, sources = null, isWelcome = false) {
-    const messageId = Date.now();
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${type}${isWelcome ? ' welcome-message' : ''}`;
-    messageDiv.id = `message-${messageId}`;
-    
-    // Convert markdown to HTML for assistant messages
-    const displayContent = type === 'assistant' ? marked.parse(content) : escapeHtml(content);
-    
-    let html = `<div class="message-content">${displayContent}</div>`;
-    
-    if (sources && sources.length > 0) {
-        // Process sources to create clickable links with shortened, more readable text
-        const sourceItems = sources.map(source => {
-            if (source.link) {
-                // Extract and format readable lesson info from the text
-                const readableText = formatSourceText(source.text);
-                return `<div class="source-item"><a href="${source.link}" target="_blank" rel="noopener noreferrer">${readableText}</a></div>`;
-            } else {
-                const readableText = formatSourceText(source.text);
-                return `<div class="source-item">${readableText}</div>`;
+    async sendMessage() {
+        const messageInput = document.getElementById('messageInput');
+        const message = messageInput.value.trim();
+        
+        if (!message) return;
+
+        // Clear input and add user message to UI
+        messageInput.value = '';
+        this.addMessageToUI(message, 'user');
+
+        try {
+            // Show loading state
+            const loadingMessage = this.addMessageToUI('Thinking...', 'assistant', true);
+
+            // Send query to backend
+            const response = await fetch('/api/query', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    query: message,
+                    session_id: this.sessionId
+                })
+            });
+
+            const data = await response.json();
+
+            // Remove loading message
+            if (loadingMessage) {
+                loadingMessage.remove();
             }
-        });
-        
-        html += `
-            <details class="sources-collapsible">
-                <summary class="sources-header">📚 Sources (${sources.length})</summary>
-                <div class="sources-content">${sourceItems.join('')}</div>
-            </details>
-        `;
-    }
-    
-    messageDiv.innerHTML = html;
-    chatMessages.appendChild(messageDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-    
-    return messageId;
-}
 
-// Helper function to escape HTML for user messages
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
+            // Add assistant response
+            this.addMessageToUI(data.answer, 'assistant', false, data.sources);
 
-// Helper function to format source text for better readability
-function formatSourceText(sourceText) {
-    // Extract course name and lesson number from typical format:
-    // "MCP: Build Rich-Context AI Apps with Anthropic - Lesson X" or similar
-    
-    // First, try to extract lesson number
-    const lessonMatch = sourceText.match(/(?:lesson|module)\s*(\d+)/i);
-    const lessonNumber = lessonMatch ? lessonMatch[1] : null;
-    
-    // Try to extract course name (usually everything before the first " - ")
-    const parts = sourceText.split(' - ');
-    let courseName = parts[0];
-    
-    // Shorten common long course names
-    courseName = courseName
-        .replace(/^MCP:\s*Build Rich-Context AI Apps with Anthropic$/i, 'MCP Course')
-        .replace(/^MCP:\s*Build Rich-Context AI Apps with Anthropic/i, 'MCP Course')
-        .replace(/Course Materials?/i, '')
-        .trim();
-    
-    // Format the result
-    if (lessonNumber) {
-        return `${courseName} → Lesson ${lessonNumber}`;
-    } else if (parts.length > 1) {
-        // If there's additional info after the dash, use it
-        const additionalInfo = parts.slice(1).join(' - ').trim();
-        if (additionalInfo && additionalInfo !== courseName) {
-            return `${courseName} → ${additionalInfo}`;
+        } catch (error) {
+            console.error('Error sending message:', error);
+            // Remove loading message
+            const loadingMessage = document.querySelector('.message.loading');
+            if (loadingMessage) {
+                loadingMessage.remove();
+            }
+            
+            this.addMessageToUI('Sorry, there was an error processing your request.', 'assistant');
         }
     }
-    
-    // Fallback: return the original text if it's already short, otherwise truncate
-    return sourceText.length > 50 ? `${courseName}...` : sourceText;
-}
 
-// Removed removeMessage function - no longer needed since we handle loading differently
-
-async function createNewSession() {
-    // Reset session state
-    currentSessionId = null;
-    
-    // Clear chat messages
-    chatMessages.innerHTML = '';
-    
-    // Reset input state
-    chatInput.value = '';
-    chatInput.disabled = false;
-    sendButton.disabled = false;
-    
-    // Focus on input for immediate use
-    chatInput.focus();
-    
-    // Add welcome message
-    addMessage('Welcome to the Course Materials Assistant! I can help you with questions about courses, lessons and specific content. What would you like to know?', 'assistant', null, true);
-}
-
-// Load course statistics
-async function loadCourseStats() {
-    try {
-        console.log('Loading course stats...');
-        const response = await fetch(`${API_URL}/courses`);
-        if (!response.ok) throw new Error('Failed to load course stats');
+    addMessageToUI(content, type, isLoading = false, sources = null) {
+        const messagesContainer = document.getElementById('messages');
+        const messageDiv = document.createElement('div');
         
-        const data = await response.json();
-        console.log('Course data received:', data);
+        messageDiv.className = `message ${type}-message`;
+        if (isLoading) {
+            messageDiv.classList.add('loading');
+        }
+
+        let messageHTML = `<div class="message-content">${content}</div>`;
         
-        // Update stats in UI
-        if (totalCourses) {
-            totalCourses.textContent = data.total_courses;
+        // Add timestamp if enabled
+        if (this.settingsManager.shouldShowTimestamps() && !isLoading) {
+            const timestamp = new Date().toLocaleTimeString();
+            messageHTML += `<div class="message-timestamp">${timestamp}</div>`;
         }
         
-        // Update course titles
-        if (courseTitles) {
-            if (data.course_titles && data.course_titles.length > 0) {
-                courseTitles.innerHTML = data.course_titles
-                    .map(title => `<div class="course-title-item">${title}</div>`)
-                    .join('');
-            } else {
-                courseTitles.innerHTML = '<span class="no-courses">No courses available</span>';
+        // Add sources if available
+        if (sources && sources.length > 0) {
+            messageHTML += '<div class="message-sources">';
+            messageHTML += '<h4>Sources:</h4>';
+            sources.forEach(source => {
+                // Handle both string and object sources
+                if (typeof source === 'string') {
+                    messageHTML += `<div class="source-item">${source}</div>`;
+                } else if (source.link) {
+                    messageHTML += `<div class="source-item"><a href="${source.link}" class="source-link" target="_blank">${source.text}</a></div>`;
+                } else {
+                    messageHTML += `<div class="source-item">${source.text || source}</div>`;
+                }
+            });
+            messageHTML += '</div>';
+        }
+
+        messageDiv.innerHTML = messageHTML;
+        messagesContainer.appendChild(messageDiv);
+        
+        // Auto-scroll if enabled
+        if (this.settingsManager.shouldAutoScroll()) {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+        
+        return messageDiv;
+    }
+
+    async loadInitialData() {
+        await Promise.all([
+            this.loadCourseAnalytics(),
+            this.loadSessionLogs(),
+            this.loadSampleQuestions()
+        ]);
+    }
+
+    async loadCourseAnalytics() {
+        try {
+            const response = await fetch('/api/courses');
+            const data = await response.json();
+            
+            const analyticsContainer = document.getElementById('courseAnalytics');
+            if (analyticsContainer) {
+                let analyticsHTML = '';
+                
+                if (data.courses && data.courses.length > 0) {
+                    analyticsHTML = '<ul>';
+                    data.courses.forEach(course => {
+                        analyticsHTML += `<li><strong>${course.title}</strong><br>`;
+                        analyticsHTML += `Lessons: ${course.lesson_count || 'N/A'}<br>`;
+                        analyticsHTML += `Instructor: ${course.instructor || 'N/A'}</li>`;
+                    });
+                    analyticsHTML += '</ul>';
+                } else {
+                    analyticsHTML = 'No course data available';
+                }
+                
+                analyticsContainer.innerHTML = analyticsHTML;
+            }
+        } catch (error) {
+            console.error('Error loading course analytics:', error);
+            const analyticsContainer = document.getElementById('courseAnalytics');
+            if (analyticsContainer) {
+                analyticsContainer.innerHTML = 'Error loading course data';
             }
         }
-        
-    } catch (error) {
-        console.error('Error loading course stats:', error);
-        // Set default values on error
-        if (totalCourses) {
-            totalCourses.textContent = '0';
+    }
+
+    async loadSessionLogs() {
+        try {
+            const response = await fetch('/api/logs');
+            const data = await response.json();
+            
+            const logsContainer = document.getElementById('logsContainer');
+            if (logsContainer) {
+                let logsHTML = '';
+                
+                if (data.logs && data.logs.length > 0) {
+                    logsHTML = '<div class="logs-list">';
+                    data.logs.forEach(log => {
+                        logsHTML += `<div class="log-entry">`;
+                        logsHTML += `<strong>${log.timestamp || 'Unknown time'}:</strong> `;
+                        logsHTML += `${log.message || 'No message'}`;
+                        if (log.tokens) {
+                            logsHTML += ` (${log.tokens} tokens)`;
+                        }
+                        logsHTML += `</div>`;
+                    });
+                    logsHTML += '</div>';
+                } else {
+                    logsHTML = 'No session logs available';
+                }
+                
+                logsContainer.innerHTML = logsHTML;
+            }
+        } catch (error) {
+            console.error('Error loading session logs:', error);
+            const logsContainer = document.getElementById('logsContainer');
+            if (logsContainer) {
+                logsContainer.innerHTML = 'Error loading session logs';
+            }
         }
-        if (courseTitles) {
-            courseTitles.innerHTML = '<span class="error">Failed to load courses</span>';
+    }
+
+    async clearLogs() {
+        try {
+            await fetch('/api/logs/clear', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+            
+            // Reload logs after clearing
+            await this.loadSessionLogs();
+        } catch (error) {
+            console.error('Error clearing logs:', error);
+        }
+    }
+
+    async loadSampleQuestions() {
+        try {
+            const response = await fetch('/api/sample-questions');
+            const data = await response.json();
+            
+            const questionsContainer = document.getElementById('sampleQuestions');
+            if (questionsContainer) {
+                let questionsHTML = '<h4>Sample Questions</h4>';
+                
+                if (data && data.length > 0) {
+                    questionsHTML += '<div class="sample-questions-grid">';
+                    data.forEach(question => {
+                        questionsHTML += `<button class="sample-question" onclick="chatbot.fillQuestion('${question.question.replace(/'/g, "\\'")}')">`;
+                        questionsHTML += `<span class="category">${question.category}</span>`;
+                        questionsHTML += `${question.question}`;
+                        questionsHTML += `</button>`;
+                    });
+                    questionsHTML += '</div>';
+                } else {
+                    questionsHTML += 'No sample questions available';
+                }
+                
+                questionsContainer.innerHTML = questionsHTML;
+            }
+        } catch (error) {
+            console.error('Error loading sample questions:', error);
+            const questionsContainer = document.getElementById('sampleQuestions');
+            if (questionsContainer) {
+                questionsContainer.innerHTML = '<h4>Sample Questions</h4>Error loading sample questions';
+            }
+        }
+    }
+
+    fillQuestion(question) {
+        const messageInput = document.getElementById('messageInput');
+        if (messageInput) {
+            messageInput.value = question;
+            messageInput.focus();
         }
     }
 }
 
-// Tab Functions
-function switchTab(tabName) {
-    // Update tab buttons
-    document.querySelectorAll('.tab-button').forEach(button => {
-        button.classList.remove('active');
-    });
-    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-    
-    // Update tab content
-    document.querySelectorAll('.tab-content').forEach(content => {
-        content.classList.remove('active');
-    });
-    document.getElementById(`${tabName}Tab`).classList.add('active');
-    
-    // Load logs if switching to logs tab
-    if (tabName === 'logs') {
-        loadLogs();
+// Resize Manager for Sidebar
+class ResizeManager {
+    constructor() {
+        this.isResizing = false;
+        this.startX = 0;
+        this.startWidth = 0;
+        this.sidebar = null;
+        this.resizeHandle = null;
+        this.minWidth = 280;
+        this.maxWidth = 600;
+    }
+
+    init() {
+        this.sidebar = document.getElementById('sidebar');
+        this.resizeHandle = document.getElementById('resizeHandle');
+        
+        if (!this.sidebar || !this.resizeHandle) {
+            console.warn('Sidebar or resize handle not found');
+            return;
+        }
+
+        // Load saved width from localStorage
+        const savedWidth = localStorage.getItem('sidebarWidth');
+        if (savedWidth) {
+            const width = parseInt(savedWidth, 10);
+            if (width >= this.minWidth && width <= this.maxWidth) {
+                this.sidebar.style.width = width + 'px';
+            }
+        }
+
+        this.bindEvents();
+    }
+
+    bindEvents() {
+        // Mouse events
+        this.resizeHandle.addEventListener('mousedown', (e) => this.startResize(e));
+        document.addEventListener('mousemove', (e) => this.handleResize(e));
+        document.addEventListener('mouseup', () => this.stopResize());
+
+        // Touch events for mobile
+        this.resizeHandle.addEventListener('touchstart', (e) => this.startResize(e.touches[0]));
+        document.addEventListener('touchmove', (e) => this.handleResize(e.touches[0]));
+        document.addEventListener('touchend', () => this.stopResize());
+
+        // Prevent text selection during resize
+        this.resizeHandle.addEventListener('selectstart', (e) => e.preventDefault());
+    }
+
+    startResize(event) {
+        this.isResizing = true;
+        this.startX = event.clientX;
+        this.startWidth = parseInt(document.defaultView.getComputedStyle(this.sidebar).width, 10);
+        
+        // Add visual feedback
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+        document.body.classList.add('resizing');
+        this.sidebar.style.transition = 'none';
+        
+        // Add a class to indicate resizing state
+        this.sidebar.classList.add('resizing');
+        
+        event.preventDefault();
+    }
+
+    handleResize(event) {
+        if (!this.isResizing) return;
+
+        const currentX = event.clientX;
+        const dx = this.startX - currentX; // Note: reversed because handle is on left
+        const newWidth = this.startWidth + dx;
+
+        // Constrain within min/max bounds
+        const constrainedWidth = Math.max(this.minWidth, Math.min(this.maxWidth, newWidth));
+        
+        this.sidebar.style.width = constrainedWidth + 'px';
+        
+        event.preventDefault();
+    }
+
+    stopResize() {
+        if (!this.isResizing) return;
+
+        this.isResizing = false;
+        
+        // Remove visual feedback
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        document.body.classList.remove('resizing');
+        this.sidebar.style.transition = '';
+        this.sidebar.classList.remove('resizing');
+
+        // Save the current width to localStorage
+        const currentWidth = parseInt(this.sidebar.style.width, 10);
+        localStorage.setItem('sidebarWidth', currentWidth.toString());
+    }
+
+    // Method to programmatically set sidebar width
+    setSidebarWidth(width) {
+        const constrainedWidth = Math.max(this.minWidth, Math.min(this.maxWidth, width));
+        this.sidebar.style.width = constrainedWidth + 'px';
+        localStorage.setItem('sidebarWidth', constrainedWidth.toString());
+    }
+
+    // Method to reset to default width
+    resetToDefault() {
+        this.setSidebarWidth(350); // Default width
     }
 }
 
-// Log Functions
-async function loadLogs() {
-    if (!logMessages) return;
-    
-    try {
-        const response = await fetch(`${API_URL}/logs`);
-        if (!response.ok) throw new Error('Failed to load logs');
+// Settings Manager
+class SettingsManager {
+    constructor(chatbot) {
+        this.chatbot = chatbot;
+        this.settings = {
+            autoScroll: true,
+            showTimestamps: false,
+            typingIndicators: true,
+            reducedMotion: false,
+            highContrast: false,
+            saveHistory: true,
+            theme: 'dark'
+        };
+        this.loadSettings();
+    }
+
+    init() {
+        this.bindSettingsEvents();
+        this.updateThemeButtons();
+        this.applySettings();
+    }
+
+    bindSettingsEvents() {
+        // Theme selection buttons
+        const themeButtons = document.querySelectorAll('.theme-option');
+        themeButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                const theme = e.currentTarget.getAttribute('data-theme');
+                this.setTheme(theme);
+            });
+        });
+
+        // Toggle switches
+        const toggles = [
+            'autoScroll', 'showTimestamps', 'typingIndicators', 
+            'reducedMotion', 'highContrast', 'saveHistory'
+        ];
+
+        toggles.forEach(setting => {
+            const toggle = document.getElementById(setting);
+            if (toggle) {
+                toggle.checked = this.settings[setting];
+                toggle.addEventListener('change', (e) => {
+                    this.updateSetting(setting, e.target.checked);
+                });
+            }
+        });
+
+        // Clear all data button
+        const clearDataButton = document.getElementById('clearAllData');
+        if (clearDataButton) {
+            clearDataButton.addEventListener('click', () => {
+                this.clearAllData();
+            });
+        }
+    }
+
+    setTheme(theme) {
+        this.settings.theme = theme;
         
-        const logs = await response.json();
-        
-        if (logs.length === 0) {
-            logMessages.innerHTML = '<div class="log-entry">No logs available</div>';
+        if (theme === 'auto') {
+            // Use system preference
+            const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+            const systemTheme = mediaQuery.matches ? 'dark' : 'light';
+            this.chatbot.themeManager.setTheme(systemTheme);
+            
+            // Listen for system changes
+            mediaQuery.addEventListener('change', (e) => {
+                if (this.settings.theme === 'auto') {
+                    this.chatbot.themeManager.setTheme(e.matches ? 'dark' : 'light');
+                }
+            });
         } else {
-            logMessages.innerHTML = logs.map(log => {
-                const timestamp = new Date(log.timestamp).toLocaleString();
-                return `
-                    <div class="log-entry">
-                        <div class="log-header">
-                            <span class="log-timestamp">${timestamp}</span>
-                            <span class="log-level ${log.level}">${log.level}</span>
+            this.chatbot.themeManager.setTheme(theme);
+        }
+        
+        this.updateThemeButtons();
+        this.saveSettings();
+    }
+
+    updateThemeButtons() {
+        const themeButtons = document.querySelectorAll('.theme-option');
+        themeButtons.forEach(button => {
+            const buttonTheme = button.getAttribute('data-theme');
+            button.classList.toggle('active', buttonTheme === this.settings.theme);
+        });
+    }
+
+    updateSetting(key, value) {
+        this.settings[key] = value;
+        this.applySettings();
+        this.saveSettings();
+    }
+
+    applySettings() {
+        // Apply reduced motion
+        if (this.settings.reducedMotion) {
+            document.documentElement.style.setProperty('--transition-duration', '0s');
+            document.documentElement.classList.add('reduced-motion');
+        } else {
+            document.documentElement.style.removeProperty('--transition-duration');
+            document.documentElement.classList.remove('reduced-motion');
+        }
+
+        // Apply high contrast
+        if (this.settings.highContrast) {
+            document.documentElement.classList.add('high-contrast');
+        } else {
+            document.documentElement.classList.remove('high-contrast');
+        }
+
+        // Update message timestamps visibility
+        const messages = document.querySelectorAll('.message');
+        messages.forEach(message => {
+            const timestamp = message.querySelector('.message-timestamp');
+            if (timestamp) {
+                timestamp.style.display = this.settings.showTimestamps ? 'block' : 'none';
+            }
+        });
+    }
+
+    clearAllData() {
+        if (confirm('Are you sure you want to clear all data? This will remove all conversations, logs, and settings. This action cannot be undone.')) {
+            // Clear localStorage
+            localStorage.clear();
+            
+            // Clear messages
+            const messagesContainer = document.getElementById('messages');
+            if (messagesContainer) {
+                messagesContainer.innerHTML = `
+                    <div class="message assistant-message">
+                        <div class="message-content">
+                            Hello! I'm your RAG chatbot assistant. Ask me anything about the available courses and content.
                         </div>
-                        <div class="log-message">${escapeHtml(log.message)}</div>
                     </div>
                 `;
-            }).join('');
+            }
+
+            // Clear logs via API
+            this.chatbot.clearLogs();
+
+            // Reset settings to defaults
+            this.settings = {
+                autoScroll: true,
+                showTimestamps: false,
+                typingIndicators: true,
+                reducedMotion: false,
+                highContrast: false,
+                saveHistory: true,
+                theme: 'dark'
+            };
+
+            // Reset UI
+            this.init();
+            this.chatbot.themeManager.setTheme('dark');
+
+            alert('All data has been cleared successfully.');
         }
-        
-        // Auto scroll to bottom
-        logMessages.scrollTop = logMessages.scrollHeight;
-        
-    } catch (error) {
-        console.error('Error loading logs:', error);
-        if (logMessages) {
-            logMessages.innerHTML = '<div class="log-entry error">Failed to load logs</div>';
+    }
+
+    loadSettings() {
+        const saved = localStorage.getItem('chatbotSettings');
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                this.settings = { ...this.settings, ...parsed };
+            } catch (e) {
+                console.warn('Failed to parse saved settings:', e);
+            }
         }
+    }
+
+    saveSettings() {
+        localStorage.setItem('chatbotSettings', JSON.stringify(this.settings));
+    }
+
+    // Getter methods for other parts of the app
+    shouldAutoScroll() {
+        return this.settings.autoScroll;
+    }
+
+    shouldShowTimestamps() {
+        return this.settings.showTimestamps;
+    }
+
+    shouldShowTypingIndicators() {
+        return this.settings.typingIndicators;
+    }
+
+    shouldSaveHistory() {
+        return this.settings.saveHistory;
     }
 }
 
-async function clearLogs() {
-    try {
-        const response = await fetch(`${API_URL}/logs/clear`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
+// System Theme Detection and Auto-switching
+class SystemThemeDetector {
+    constructor(themeManager) {
+        this.themeManager = themeManager;
+        this.init();
+    }
+
+    init() {
+        // Check if user prefers reduced motion
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+        if (prefersReducedMotion.matches) {
+            document.documentElement.style.setProperty('--transition-duration', '0s');
+        }
+
+        // Listen for system theme changes
+        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        
+        // Only auto-switch if no user preference is saved
+        if (!localStorage.getItem('theme')) {
+            this.themeManager.setTheme(mediaQuery.matches ? 'dark' : 'light');
+        }
+
+        // Listen for changes (user might change system theme)
+        mediaQuery.addEventListener('change', (e) => {
+            // Only auto-switch if no user preference is saved
+            if (!localStorage.getItem('theme')) {
+                this.themeManager.setTheme(e.matches ? 'dark' : 'light');
             }
         });
-        
-        if (!response.ok) throw new Error('Failed to clear logs');
-        
-        // Reload logs to show empty state
-        loadLogs();
-        
-    } catch (error) {
-        console.error('Error clearing logs:', error);
     }
 }
 
-// Refresh logs function (manual refresh only)
-function refreshLogs() {
-    loadLogs();
+// Keyboard Shortcuts
+class KeyboardShortcuts {
+    constructor(chatbot) {
+        this.chatbot = chatbot;
+        this.init();
+    }
+
+    init() {
+        document.addEventListener('keydown', (e) => {
+            // Ctrl/Cmd + K to focus message input
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                const messageInput = document.getElementById('messageInput');
+                if (messageInput) {
+                    messageInput.focus();
+                }
+            }
+
+            // Ctrl/Cmd + Shift + T to toggle theme
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'T') {
+                e.preventDefault();
+                this.chatbot.themeManager.toggleTheme();
+            }
+
+            // Escape to clear message input
+            if (e.key === 'Escape') {
+                const messageInput = document.getElementById('messageInput');
+                if (messageInput && document.activeElement === messageInput) {
+                    messageInput.value = '';
+                    messageInput.blur();
+                }
+            }
+        });
+    }
 }
+
+// Initialize the application when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    const chatbot = new RAGChatbot();
+    const systemThemeDetector = new SystemThemeDetector(chatbot.themeManager);
+    const keyboardShortcuts = new KeyboardShortcuts(chatbot);
+    
+    // Make chatbot available globally for debugging
+    window.chatbot = chatbot;
+    
+    console.log('RAG Chatbot initialized with theme support');
+    console.log('Keyboard shortcuts:');
+    console.log('  Ctrl/Cmd + K: Focus message input');
+    console.log('  Ctrl/Cmd + Shift + T: Toggle theme');
+    console.log('  Escape: Clear message input (when focused)');
+});
