@@ -52,7 +52,8 @@
       "Bash(\"C:\\Program Files\\GitHub CLI\\gh.exe\" auth login)",
       "Bash(\"C:\\Program Files\\GitHub CLI\\gh.exe\" api user/installations)",
       "WebFetch(domain:github.com)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(git fetch:*)"
     ],
     "deny": [],
     "ask": []
