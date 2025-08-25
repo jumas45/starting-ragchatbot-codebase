@@ -1,0 +1,3 @@
+[submodule "starting-ragchatbot-codebase"]
+	path = starting-ragchatbot-codebase
+	url = https://github.com/username/starting-ragchatbot-codebase.git

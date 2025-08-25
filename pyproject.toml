@@ -21,5 +21,6 @@ dev = [
     "flake8",
     "mypy",
     "isort",
-    "black"
+    "black",
+    "pytest-cov"
 ]
