@@ -59,9 +59,25 @@
       "Bash(git checkout:*)",
       "Bash(git cherry-pick:*)",
       "Bash(grep:*)",
-      "Bash(make:*)"
+      "Bash(make:*)",
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_evaluate",
+      "mcp__playwright__browser_drag"
     ],
     "deny": [],
     "ask": []
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Read|Grep",
+        "hooks": [
+          {
+            "type": "command",
+            "command": " echo 'All Done!'"
+          }
+        ]
+      }
+    ]
   }
 }

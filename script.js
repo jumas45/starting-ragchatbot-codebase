@@ -211,6 +211,9 @@ class RAGChatbot {
             this.loadSessionLogs(),
             this.loadSampleQuestions()
         ]);
+        
+        // Start polling for log updates every 2 seconds
+        this.startLogPolling();
     }
 
     async loadCourseAnalytics() {
@@ -271,6 +274,15 @@ class RAGChatbot {
                 }
                 
                 logsContainer.innerHTML = logsHTML;
+                
+                // Auto-scroll to bottom if logs tab is active
+                const logsTab = document.getElementById('logs-tab');
+                if (logsTab && logsTab.classList.contains('active')) {
+                    const logsList = logsContainer.querySelector('.logs-list');
+                    if (logsList) {
+                        logsList.scrollTop = logsList.scrollHeight;
+                    }
+                }
             }
         } catch (error) {
             console.error('Error loading session logs:', error);
@@ -278,6 +290,20 @@ class RAGChatbot {
             if (logsContainer) {
                 logsContainer.innerHTML = 'Error loading session logs';
             }
+        }
+    }
+
+    startLogPolling() {
+        // Poll for log updates every 2 seconds
+        this.logPollingInterval = setInterval(() => {
+            this.loadSessionLogs();
+        }, 2000);
+    }
+
+    stopLogPolling() {
+        if (this.logPollingInterval) {
+            clearInterval(this.logPollingInterval);
+            this.logPollingInterval = null;
         }
     }
 
