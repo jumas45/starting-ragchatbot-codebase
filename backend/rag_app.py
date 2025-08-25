@@ -181,12 +181,14 @@ class SampleQuestion(BaseModel):
 async def get_sample_questions():
     """Get sample questions for the chatbot"""
     sample_questions = [
-        SampleQuestion(question="What is Python and why is it popular?", category="Programming"),
-        SampleQuestion(question="How do I install Python packages?", category="Setup"),
-        SampleQuestion(question="What are the basics of machine learning?", category="AI/ML"),
-        SampleQuestion(question="How do I create a REST API with FastAPI?", category="Web Development"),
-        SampleQuestion(question="What is the difference between supervised and unsupervised learning?", category="AI/ML"),
-        SampleQuestion(question="How do I handle errors in Python?", category="Programming"),
+        SampleQuestion(question="How do I use Claude's computer use capability?", category="Computer Use"),
+        SampleQuestion(question="What is the Model Context Protocol (MCP) and how does it work?", category="MCP"),
+        SampleQuestion(question="How can I implement advanced retrieval techniques with Chroma?", category="RAG & Retrieval"),
+        SampleQuestion(question="What is prompt compression and how can it reduce costs?", category="Optimization"),
+        SampleQuestion(question="How do I set up multi-modal requests with Anthropic's API?", category="API Usage"),
+        SampleQuestion(question="What are the benefits of query expansion in vector search?", category="RAG & Retrieval"),
+        SampleQuestion(question="How do I build an MCP server and client?", category="MCP"),
+        SampleQuestion(question="What filtering techniques can improve retrieval results?", category="Optimization"),
     ]
     return sample_questions
 
