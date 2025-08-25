@@ -164,4 +164,13 @@ class DevStaticFiles(StaticFiles):
     
     
 # Serve static files for the frontend
-app.mount("/", StaticFiles(directory="../frontend", html=True), name="static")
+import pathlib
+frontend_dir = pathlib.Path(__file__).parent.parent / "frontend"
+if frontend_dir.exists():
+    app.mount("/", StaticFiles(directory=str(frontend_dir), html=True), name="static")
+else:
+    # For testing environments where frontend may not be available
+    from fastapi.responses import JSONResponse
+    @app.get("/")
+    async def root_fallback():
+        return JSONResponse({"message": "Frontend not available in test environment"})
