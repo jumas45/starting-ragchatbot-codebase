@@ -41,7 +41,18 @@
       "Bash(git reset:*)",
       "Bash(git clean:*)",
       "Bash(git submodule:*)",
-      "Bash(git worktree:*)"
+      "Bash(git worktree:*)",
+      "Bash(claude mcp:*)",
+      "Bash(gh:*)",
+      "WebFetch(domain:cli.github.com)",
+      "Bash(winget install:*)",
+      "Bash(where gh)",
+      "Bash(refreshenv)",
+      "Bash(\"C:\\Program Files\\GitHub CLI\\gh.exe\" --version)",
+      "Bash(\"C:\\Program Files\\GitHub CLI\\gh.exe\" auth login)",
+      "Bash(\"C:\\Program Files\\GitHub CLI\\gh.exe\" api user/installations)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ],
     "deny": [],
     "ask": []
