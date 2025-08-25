@@ -68,6 +68,15 @@ jobs:
       run: |
         make format
         git diff --exit-code
+    
+    - name: Commit formatting changes
+      if: failure()
+      run: |
+        git config --global user.name "github-actions"
+        git config --global user.email "github-actions@github.com"
+        git add .
+        git commit -m "style: auto-format code"
+        git push
 
   security:
     runs-on: ubuntu-latest
