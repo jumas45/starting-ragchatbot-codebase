@@ -1,92 +1,56 @@
-# RAG Chatbot with Code Quality Tools
+# Course Materials RAG System
 
-This project includes essential code quality tools for maintaining consistent, high-quality Python code.
+A Retrieval-Augmented Generation (RAG) system designed to answer questions about course materials using semantic search and AI-powered responses.
 
-## Code Quality Tools
+## Overview
 
-The following tools are configured and ready to use:
+This application is a full-stack web application that enables users to query course materials and receive intelligent, context-aware responses. It uses ChromaDB for vector storage, Anthropic's Claude for AI generation, and provides a web interface for interaction.
 
-- **Black**: Code formatter for consistent style
-- **isort**: Import sorter for organized imports  
-- **Flake8**: Style guide enforcement and error detection
-- **Mypy**: Static type checker
 
-## Usage
+## Prerequisites
 
-### Quick Commands
+- Python 3.13 or higher
+- uv (Python package manager)
+- An Anthropic API key (for Claude AI)
+- **For Windows**: Use Git Bash to run the application commands - [Download Git for Windows](https://git-scm.com/downloads/win)
 
-Using the Makefile (recommended):
+## Installation
 
-```bash
-# Format code
-make format
-
-# Run linting checks  
-make lint
-
-# Run all quality checks
-make quality-check
-
-# Install dependencies
-make install
-```
-
-### Direct Script Usage
-
-```bash
-# Format code with black and isort
-uv run python scripts/format.py
-
-# Run linting with flake8 and mypy
-uv run python scripts/lint.py
-
-# Run comprehensive quality checks
-uv run python scripts/quality-check.py
-```
-
-### Individual Tool Usage
-
-```bash
-# Black formatting
-uv run black src/
-
-# Import sorting
-uv run isort src/
-
-# Flake8 linting
-uv run flake8 src/
-
-# Type checking
-uv run mypy src/
-```
-
-## Development Setup
-
-1. Install dependencies:
+1. **Install uv** (if not already installed)
    ```bash
-   uv sync --group dev
+   curl -LsSf https://astral.sh/uv/install.sh | sh
    ```
 
-2. Run quality checks:
+2. **Install Python dependencies**
    ```bash
-   make quality-check
+   uv sync
    ```
 
-## Pre-commit Hook
+3. **Set up environment variables**
+   
+   Create a `.env` file in the root directory:
+   ```bash
+   ANTHROPIC_API_KEY=your_anthropic_api_key_here
+   ```
 
-To automatically run quality checks before commits, you can set up the pre-commit hook:
+## Running the Application
 
+### Quick Start
+
+Use the provided shell script:
 ```bash
-# Copy the hook to your git hooks directory
-cp scripts/pre-commit-hook.py .git/hooks/pre-commit
-chmod +x .git/hooks/pre-commit
+chmod +x run.sh
+./run.sh
 ```
 
-## Configuration
+### Manual Start
 
-All tools are configured in `pyproject.toml`:
+```bash
+cd backend
+uv run uvicorn app:app --reload --port 8000
+```
 
-- **Black**: 88 character line length, Python 3.8+ target
-- **isort**: Black-compatible profile
-- **Flake8**: 88 character line length, ignore E203/W503
-- **Mypy**: Standard configuration
+The application will be available at:
+- Web Interface: `http://localhost:8000`
+- API Documentation: `http://localhost:8000/docs`
+

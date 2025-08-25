@@ -1,83 +1,17 @@
 [project]
-name = "rag-system"
-version = "1.0.0"
-description = "RAG System with FastAPI backend and code quality tools"
-requires-python = ">=3.9"
+name = "starting-codebase"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
 dependencies = [
-    "fastapi>=0.104.0",
-    "uvicorn[standard]>=0.24.0",
-    "pydantic>=2.4.0",
-    "python-multipart>=0.0.6",
-    "pytest>=7.4.0",
-    "pytest-asyncio>=0.21.0",
-    "httpx>=0.25.0",
-    "pytest-cov>=4.1.0",
     "chromadb==1.0.15",
     "anthropic==0.58.2",
     "google-generativeai>=0.3.0",
     "sentence-transformers==5.0.0",
+    "fastapi==0.116.1",
+    "uvicorn==0.35.0",
+    "python-multipart==0.0.20",
     "python-dotenv==1.1.1",
-]
-
-[tool.black]
-line-length = 88
-target-version = ['py38']
-include = '\.pyi?$'
-extend-exclude = '''
-/(
-  # directories
-  \.eggs
-  | \.git
-  | \.hg
-  | \.mypy_cache
-  | \.tox
-  | \.venv
-  | _build
-  | buck-out
-  | build
-  | dist
-)/
-'''
-
-[tool.isort]
-profile = "black"
-line_length = 88
-multi_line_output = 3
-
-[tool.flake8]
-max-line-length = 88
-extend-ignore = ["E203", "W503"]
-
-[tool.pytest.ini_options]
-testpaths = ["backend/tests"]
-python_files = ["test_*.py", "*_test.py"]
-python_classes = ["Test*"]
-python_functions = ["test_*"]
-addopts = [
-    "-v",
-    "--strict-markers",
-    "--strict-config",
-    "--tb=short",
-    "--cov=backend",
-    "--cov-report=term-missing",
-    "--cov-report=html:coverage_html",
-]
-markers = [
-    "unit: Unit tests",
-    "integration: Integration tests",
-    "api: API endpoint tests",
-    "slow: Slow running tests",
-]
-asyncio_mode = "auto"
-filterwarnings = [
-    "ignore::DeprecationWarning",
-    "ignore::PendingDeprecationWarning",
-]
-
-[dependency-groups]
-dev = [
-    "black>=24.8.0",
-    "flake8>=5.0.4",
-    "isort>=5.13.2",
-    "mypy>=1.14.1",
+    "pytest>=8.4.1",
 ]

@@ -1,79 +1,149 @@
+"""Test configuration and fixtures"""
+
 import pytest
 import os
+import sys
 import tempfile
-from fastapi.testclient import TestClient
-from unittest.mock import patch
-from backend.app import app, SAMPLE_COURSES
+import shutil
+from unittest.mock import Mock, MagicMock
+
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+
+from config import Config
+from vector_store import VectorStore, SearchResults
+from search_tools import CourseSearchTool, CourseOutlineTool, ToolManager
+from ai_generator import AIGenerator
+from rag_system import RAGSystem
+
 
 @pytest.fixture
-def client():
-    """Create a test client for the FastAPI application"""
-    with TestClient(app) as test_client:
-        yield test_client
+def temp_dir():
+    """Create a temporary directory for testing"""
+    temp_dir = tempfile.mkdtemp()
+    yield temp_dir
+    shutil.rmtree(temp_dir)
+
 
 @pytest.fixture
-def mock_static_directory():
-    """Create a temporary static directory for testing"""
-    with tempfile.TemporaryDirectory() as temp_dir:
-        with patch('backend.app.static_dir', temp_dir):
-            # Create the temp directory to simulate static files existing
-            os.makedirs(temp_dir, exist_ok=True)
-            yield temp_dir
+def mock_config(temp_dir):
+    """Create a mock config for testing"""
+    config = Mock(spec=Config)
+    config.CHROMA_PATH = os.path.join(temp_dir, "test_chroma")
+    config.EMBEDDING_MODEL = "all-MiniLM-L6-v2"
+    config.MAX_RESULTS = 5
+    config.CHUNK_SIZE = 800
+    config.CHUNK_OVERLAP = 100
+    config.MAX_HISTORY = 10
+    config.LLM_PROVIDER = "anthropic"
+    config.ANTHROPIC_API_KEY = "test-key"
+    config.ANTHROPIC_MODEL = "claude-3-sonnet-20240229"
+    return config
+
 
 @pytest.fixture
-def sample_query_request():
-    """Sample query request data for testing"""
-    return {
-        "query": "What is machine learning?",
-        "context": "Educational content about ML"
-    }
+def mock_search_results():
+    """Create mock search results for testing"""
+    def create_results(documents=None, metadata=None, error=None):
+        documents = documents or []
+        metadata = metadata or []
+        
+        results = Mock(spec=SearchResults)
+        results.documents = documents
+        results.metadata = metadata
+        results.distances = [0.5] * len(documents)
+        results.error = error
+        results.is_empty.return_value = len(documents) == 0
+        return results
+    
+    return create_results
+
 
 @pytest.fixture
-def empty_query_request():
-    """Empty query request for testing validation"""
-    return {
-        "query": "",
-        "context": None
-    }
+def mock_vector_store(mock_search_results):
+    """Create a mock vector store for testing"""
+    store = Mock(spec=VectorStore)
+    
+    # Default search behavior - return some test results
+    default_results = mock_search_results(
+        documents=["This is test content about MCP"],
+        metadata=[{
+            'course_title': 'MCP: Build Rich-Context AI Apps with Anthropic',
+            'lesson_number': 1,
+            'lesson_title': 'Introduction to MCP'
+        }]
+    )
+    store.search.return_value = default_results
+    
+    # Mock get_lesson_link method
+    store.get_lesson_link.return_value = "https://example.com/lesson/1"
+    
+    # Mock get_all_courses_metadata
+    store.get_all_courses_metadata.return_value = [
+        {
+            'title': 'MCP: Build Rich-Context AI Apps with Anthropic',
+            'course_link': 'https://example.com/mcp',
+            'instructor': 'Test Instructor',
+            'lessons': [
+                {'lesson_number': 0, 'lesson_title': 'Introduction'},
+                {'lesson_number': 1, 'lesson_title': 'Getting Started'},
+                {'lesson_number': 2, 'lesson_title': 'Advanced Topics'}
+            ]
+        }
+    ]
+    
+    return store
+
 
 @pytest.fixture
-def sample_courses():
-    """Sample courses data for testing"""
-    return SAMPLE_COURSES
+def course_search_tool(mock_vector_store):
+    """Create a CourseSearchTool instance for testing"""
+    return CourseSearchTool(mock_vector_store)
+
 
 @pytest.fixture
-def valid_course_id():
-    """Valid course ID for testing"""
-    return 1
+def course_outline_tool(mock_vector_store):
+    """Create a CourseOutlineTool instance for testing"""
+    return CourseOutlineTool(mock_vector_store)
+
 
 @pytest.fixture
-def invalid_course_id():
-    """Invalid course ID for testing"""
-    return 999
+def mock_anthropic_client():
+    """Create a mock Anthropic client for testing"""
+    client = Mock()
+    
+    # Mock response structure
+    mock_response = Mock()
+    mock_response.content = [Mock()]
+    mock_response.content[0].text = "Test AI response"
+    mock_response.stop_reason = "end_turn"
+    mock_response.usage = Mock()
+    mock_response.usage.input_tokens = 100
+    mock_response.usage.output_tokens = 50
+    
+    client.messages.create.return_value = mock_response
+    
+    return client
+
 
 @pytest.fixture
-def mock_rag_response():
-    """Mock RAG system response"""
-    return {
-        "answer": "Machine learning is a subset of artificial intelligence...",
-        "sources": ["ml_basics.pdf", "ai_overview.pdf"],
-        "confidence": 0.92
-    }
+def mock_ai_generator(mock_anthropic_client):
+    """Create a mock AI generator for testing"""
+    # Mock the anthropic import and client
+    import anthropic
+    with pytest.MonkeyPatch().context() as m:
+        m.setattr(anthropic, 'Anthropic', lambda api_key: mock_anthropic_client)
+        generator = AIGenerator("anthropic", "test-key", "claude-3-sonnet-20240229")
+    
+    return generator
 
-@pytest.fixture(autouse=True)
-def setup_test_environment():
-    """Setup test environment - runs before each test"""
-    # Ensure we're in test mode
-    os.environ["TESTING"] = "1"
-    yield
-    # Cleanup after test
-    if "TESTING" in os.environ:
-        del os.environ["TESTING"]
 
 @pytest.fixture
-def api_headers():
-    """Standard API headers for testing"""
-    return {
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-    }
+def tool_manager_with_search(mock_vector_store):
+    """Create a tool manager with search and outline tools"""
+    manager = ToolManager()
+    search_tool = CourseSearchTool(mock_vector_store)
+    outline_tool = CourseOutlineTool(mock_vector_store)
+    manager.register_tool(search_tool)
+    manager.register_tool(outline_tool)
+    return manager

@@ -1,9 +1,31 @@
+# Environment variables
 .env
+backend/.env
+
+# Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
+*$py.class
+*.so
 .Python
-.trees/
-nul
-.claude/commands/
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# ChromaDB
+backend/chroma_db/
+
+# Uploads
+uploads/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
