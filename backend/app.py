@@ -127,6 +127,33 @@ async def clear_logs():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/api/sample-questions")
+async def get_sample_questions():
+    """Get sample questions for the UI"""
+    sample_questions = [
+        {
+            "question": "What are the main topics covered in the courses?",
+            "category": "General"
+        },
+        {
+            "question": "How do I implement retrieval-augmented generation?",
+            "category": "Technical"
+        },
+        {
+            "question": "What tools are mentioned for building AI applications?",
+            "category": "Tools"
+        },
+        {
+            "question": "Who are the instructors for these courses?",
+            "category": "General"
+        },
+        {
+            "question": "How can I optimize my prompts for better results?",
+            "category": "Technical"
+        }
+    ]
+    return sample_questions
+
 @app.on_event("startup")
 async def startup_event():
     """Load initial documents on startup"""
